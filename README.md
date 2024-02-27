@@ -8,4 +8,4 @@ This repo contains three services.
 
 - Anonymiser: Redact PII from chat messages and insert into DB
 - Authentication: Authenticate users
-- User Service: Manages users' tasks, summary, and events, link their platforms, and calls ML
+- User Manager: Manages users' tasks, summary, and events, link their platforms, and calls ML
