@@ -1,8 +1,11 @@
-from confluent_kafka import Consumer, KafkaError
 import os
+from os.path import join, dirname
 from dotenv import load_dotenv
 
-load_dotenv()
+from confluent_kafka import Consumer, KafkaError
+
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 topic = 'chat-messages'
 UPSTASH_KAFKA_SERVER = os.getenv("UPSTASH_KAFKA_SERVER")
@@ -23,6 +26,7 @@ consumer = Consumer(**conf)
 consumer.subscribe([topic])
 
 try:
+    print("Starting anonymiser")
     while True:
         msg = consumer.poll(timeout=1.0)
         if msg is None:

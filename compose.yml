@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  anonymiser:
+    build:
+      context: ./anonymiser
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    env_file:
+      - .env
