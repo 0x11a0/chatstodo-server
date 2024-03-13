@@ -8,9 +8,7 @@
  * 3. Retrieving the authenticated user's profile.
  * 4. Logging out the user from the current device.
  * 5. Logging out the user from all devices.
- * 
- * It's designed for educational purposes to showcase how HTTP requests can be made 
- * using Axios and how to handle their responses.
+ *
  */
 
 require('dotenv').config();
