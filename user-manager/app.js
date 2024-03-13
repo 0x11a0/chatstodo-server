@@ -1,108 +1,47 @@
 /**
- * user.test.js
+ * app.js
  * 
- * This script tests the user-related functionalities of the server API using Axios.
- * We'll cover:
- * 1. Registering a new user.
- * 2. Refreshing all user data.
- * 3. Adding a platform link.
- * 4. Removing a platform link.
- * 5. Retrieving all platform links for a user.
+ * This file sets up and configures the Express application. Specifically, it:
+ * 1. Imports required libraries and middleware.
+ * 2. Sets up the Express instance and middleware used for body parsing, logging, etc.
+ * 3. Imports and configures the application's routes.
+ * 4. Handles errors and provides appropriate responses.
  * 
  */
 
-require('dotenv').config();
-const axios = require('axios');
+// Import required modules
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+dotenv.config();
+const bodyParser = require('body-parser');
+const userRoutes = require('./userRoutes');  // Assuming your routes file is named expressRoute.js
 
-// Base URL of your server, defaulting to localhost.
-const BASE_URL = 'http://localhost:3000/api'; 
+// Create an instance of Express
+const app = express();
 
-// Sample user data for testing.
-const testUser = {
-  username: 'testUser',
-  email: 'test@example.com',
-  password: 'password123'
-};
+// Middleware setup
 
-// Sample platform link data for testing.
-const platformLink = {
-  platform: "Telegram",
-  credentials: {
-    token: "abc123",
-    otherKey: "value"
-  }
-};
+// Enable CORS (Cross-Origin Resource Sharing) for all routes
+app.use(cors());
 
-// Variable to store the user ID after successful registration.
-let userId;
+// Use bodyParser to parse JSON payloads
+app.use(bodyParser.json());
 
-/**
- * Test function to register a new user.
- */
-async function registerUser() {
-  try {
-    const response = await axios.post(`${BASE_URL}/users/register`, testUser);
-    console.log('User registered:', response.data);
-    // Extract userId from response if your API returns it, otherwise adjust as needed
-    userId = response.data.userId;
-  } catch (error) {
-    console.error('Error registering user:', error.response.data);
-  }
-}
+// Use our routes with the Express application
+app.use('/api/', userRoutes);  // Here '/api' is a base endpoint. Adjust as needed.
 
-/**
- * Test function to refresh all user data.
- */
-async function refreshAllUserData() {
-  try {
-    const response = await axios.post(`${BASE_URL}/users/${userId}/refreshAll`);
-    console.log('Refreshed all user data:', response.data);
-  } catch (error) {
-    console.error('Error refreshing user data:', error.response.data);
-  }
-}
+// Error handling middleware
 
-/**
- * Test function to add a platform link.
- */
-async function addPlatformLink() {
-  try {
-    const response = await axios.post(`${BASE_URL}/users/${userId}/platforms`, platformLink);
-    console.log('Platform link added:', response.data);
-  } catch (error) {
-    console.error('Error adding platform link:', error.response.data);
-  }
-}
+// 404 Not Found Middleware
+app.use((req, res, next) => {
+    res.status(404).send('Page not found.');
+});
 
-/**
- * Test function to remove a platform link.
- */
-async function removePlatformLink() {
-  try {
-    const response = await axios.delete(`${BASE_URL}/users/${userId}/platforms`, { data: { platform: platformLink.platform } });
-    console.log('Platform link removed:', response.data);
-  } catch (error) {
-    console.error('Error removing platform link:', error.response.data);
-  }
-}
+// General error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something went wrong!');
+});
 
-/**
- * Test function to retrieve all platform links.
- */
-async function getPlatformLinks() {
-  try {
-    const response = await axios.get(`${BASE_URL}/users/${userId}/platforms`);
-    console.log('All platform links:', response.data);
-  } catch (error) {
-    console.error('Error retrieving platform links:', error.response.data);
-  }
-}
-
-// Sequence to run the tests one after the other.
-(async function() {
-  await registerUser();
-  await refreshAllUserData();
-  await addPlatformLink();
-  await removePlatformLink();
-  await getPlatformLinks();
-})();
+module.exports = app;
