@@ -5,11 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"time"
 
 	cmd "chatstodo/authentication/cmd"
+	utils "chatstodo/authentication/internal/utils"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
@@ -101,7 +100,7 @@ func handleOAuthCallback(c *gin.Context) {
 	}
 
     // Generate JWT
-    tokenString, err := generateJWT(userId, requestBody.Email)
+    tokenString, err := utils.GenerateJWT(userId, requestBody.Email, jwtKey)
     if err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Error signing token"})
 		log.Printf("%e",err)
@@ -110,20 +109,4 @@ func handleOAuthCallback(c *gin.Context) {
 
     // Send the token back to the user
     c.JSON(http.StatusOK, gin.H{"token": tokenString})
-}
-
-// Function to generate JWT
-func generateJWT(userID string, email string) (string, error) {
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-        "user_id": userID,
-        "email":   email,
-        "exp":     time.Now().Add(24 * time.Hour).Unix(),
-    })
-
-    tokenString, err := token.SignedString(jwtKey)
-    if err != nil {
-        return "", err
-    }
-
-    return tokenString, nil
 }
