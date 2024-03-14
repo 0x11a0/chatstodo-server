@@ -47,9 +47,35 @@ Handles the retrieval and management of user data, including tasks, events, and 
 
 #### API Usage
 
-**Base URL**: `http://localhost:3000/api`
+**Base URL**: `http://localhost:8081/users/api/v1`
 
-1. **Refresh All User Data**
+1. **Health**
+
+   - **Endpoint:** `/health`
+   - **Method:** `GET`
+   - **URL Parameters:** _None required_
+   - **Body:** _None required_
+   - **Expected Output:**
+
+   ```json
+   {
+     "Service is healthy"
+   }
+   ```
+
+   Endpoint: `/users/logoutAll`
+
+   Method: `POST`
+
+   Headers:
+
+   ```json
+   {
+     "Authorization": "Bearer <Your-Token>"
+   }
+   ```
+
+1. **Refresh All User Data** (WIP)
 
    - **Endpoint:** `/users/:userId/refreshAll`
    - **Method:** `POST`
@@ -63,7 +89,7 @@ Handles the retrieval and management of user data, including tasks, events, and 
    }
    ```
 
-1. **Get User Data**
+1. **Get User Data** (WIP)
 
    - **Endpoint:** `/users/:userId/data`
    - **Method:** `GET`
