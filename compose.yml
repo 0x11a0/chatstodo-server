@@ -8,3 +8,12 @@ services:
       - "8082:8082"
     env_file:
       - .env
+
+  authentication:
+    build:
+      context: ./authentication
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
