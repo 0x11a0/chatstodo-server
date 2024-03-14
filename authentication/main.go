@@ -57,7 +57,7 @@ func main() {
 				return
 			}
 
-			c.JSON(http.StatusOK, "Service is running")
+			c.JSON(http.StatusOK, gin.H{"message":"Service is running"})
 		})
 
 		// OAuth callback endpoint
