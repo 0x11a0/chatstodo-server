@@ -1,6 +1,7 @@
 # ChatsTodo - Server
 
 ### Overview
+
 Handles the retrieval and management of user data, including tasks, events, and summaries, from the ML Serverless Functions.
 
 #### Table of Contents
@@ -14,171 +15,148 @@ Handles the retrieval and management of user data, including tasks, events, and 
 
 1. **Clone the repository**:
 
-    ```bash
-    git clone https://github.com/lucasodra/chatstodo-server
-    cd chatstodo-server/user-manager
-    ```
+   ```bash
+   git clone https://github.com/lucasodra/chatstodo-server
+   cd chatstodo-server/user-manager
+   ```
 
 2. **Install dependencies**:
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. **Set up your environment**:
 
-    Copy `env.example` to a new file named `.env`:
+   Copy `env.example` to a new file named `.env`:
 
-    ```bash
-    cp env.example .env
-    ```
+   ```bash
+   cp env.example .env
+   ```
 
-    Ensure you update `.env` with the required environment variables.
-    Ensure you have MongoDB installed and running locally.
+   Ensure you update `.env` with the required environment variables.
+   Ensure you have MongoDB installed and running locally.
 
 4. **Start the server**:
 
-    ```bash
-    npm test
-    ```
+   ```bash
+   npm test
+   ```
 
-    By default, the server runs on `http://localhost:3000`.
-
+   By default, the server runs on `http://localhost:3000`.
 
 #### API Usage
 
 **Base URL**: `http://localhost:3000/api`
 
-1. **Register a new user (pending confirmation with auth service)**
+1. **Refresh All User Data**
 
-    - **Endpoint:** `/users/register`
-    - **Method:** `POST`
-    - **Body:**
+   - **Endpoint:** `/users/:userId/refreshAll`
+   - **Method:** `POST`
+   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Body:** _None required_
+   - **Expected Output:**
 
-    ```json
-    {
-        "username": "newUser",
-        "email": "newuser@example.com",
-        "password": "password123"
-    }
-    ```
+   ```json
+   {
+     "message": "Refresh all requested successfully."
+   }
+   ```
 
-    - **Expected Output:**
+1. **Get User Data**
 
-    ```json
-    {
-        "message": "User registered successfully!"
-    }
-    ```
+   - **Endpoint:** `/users/:userId/data`
+   - **Method:** `GET`
+   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Body:** _None required_
+   - **Expected Output:**
 
-2. **Refresh All User Data**
+   ```json
+   {
+       "tasks": [...],
+       "events": [...],
+       "summaries": [...]
+   }
+   ```
 
-    - **Endpoint:** `/users/:userId/refreshAll`
-    - **Method:** `POST`
-    - **URL Parameters:** Replace `:userId` with the actual user ID.
-    - **Body:** *None required*
-    - **Expected Output:**
+1. **Add Platform Link**
 
-    ```json
-    {
-        "message": "Refresh all requested successfully."
-    }
-    ```
+   - **Endpoint:** `/users/:userId/platforms`
+   - **Method:** `POST`
+   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Body:**
 
-3. **Get User Data**
+   ```json
+   {
+     "platform": "Telegram",
+     "credentials": {
+       "token": "abc123",
+       "otherKey": "value"
+     }
+   }
+   ```
 
-    - **Endpoint:** `/users/:userId/data`
-    - **Method:** `GET`
-    - **URL Parameters:** Replace `:userId` with the actual user ID.
-    - **Body:** *None required*
-    - **Expected Output:**
+   - **Expected Output:**
 
-    ```json
-    {
-        "tasks": [...],
-        "events": [...],
-        "summaries": [...]
-    }
-    ```
+   ```json
+   {
+     "message": "Platform link added successfully."
+   }
+   ```
 
-4. **Add Platform Link**
+1. **Remove Platform Link**
 
-    - **Endpoint:** `/users/:userId/platforms`
-    - **Method:** `POST`
-    - **URL Parameters:** Replace `:userId` with the actual user ID.
-    - **Body:**
+   - **Endpoint:** `/users/:userId/platforms`
+   - **Method:** `DELETE`
+   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Body:**
 
-    ```json
-    {
-        "platform": "Telegram",
-        "credentials": {
-            "token": "abc123",
-            "otherKey": "value"
-        }
-    }
-    ```
+   ```json
+   {
+     "platform": "Telegram"
+   }
+   ```
 
-    - **Expected Output:**
+   - **Expected Output:**
 
-    ```json
-    {
-        "message": "Platform link added successfully."
-    }
-    ```
+   ```json
+   {
+     "message": "Platform link removed successfully."
+   }
+   ```
 
-5. **Remove Platform Link**
+1. **Get All Platform Links**
 
-    - **Endpoint:** `/users/:userId/platforms`
-    - **Method:** `DELETE`
-    - **URL Parameters:** Replace `:userId` with the actual user ID.
-    - **Body:**
+   - **Endpoint:** `/users/:userId/platforms`
+   - **Method:** `GET`
+   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Body:** _None required_
+   - **Expected Output:**
 
-    ```json
-    {
-        "platform": "Telegram"
-    }
-    ```
+   ```json
+   [
+       {
+           "platformName": "Telegram",
+           "credentials": {
+               "token": "abc123",
+               "otherKey": "value"
+           }
+       },
+       ...
+   ]
+   ```
 
-    - **Expected Output:**
+   Endpoint: `/users/logoutAll`
 
-    ```json
-    {
-        "message": "Platform link removed successfully."
-    }
-    ```
+   Method: `POST`
 
-6. **Get All Platform Links**
+   Headers:
 
-    - **Endpoint:** `/users/:userId/platforms`
-    - **Method:** `GET`
-    - **URL Parameters:** Replace `:userId` with the actual user ID.
-    - **Body:** *None required*
-    - **Expected Output:**
-
-    ```json
-    [
-        {
-            "platformName": "Telegram",
-            "credentials": {
-                "token": "abc123",
-                "otherKey": "value"
-            }
-        },
-        ...
-    ]
-    ```
-
-    Endpoint: `/users/logoutAll`
-    
-    Method: `POST`
-
-    Headers:
-
-    ```json
-    {
-        "Authorization": "Bearer <Your-Token>"
-    }
-    ```
+   ```json
+   {
+     "Authorization": "Bearer <Your-Token>"
+   }
+   ```
 
 #### Directory Structure
 
@@ -205,6 +183,7 @@ Here's an overview of the main directories and files:
 #### Testing
 
 To test user-related functionalities, use the `platform.test.js` script. This script, built with Axios, tests the following:
+
 1. Creating Platform Link
 2. Removing Platform Link
 3. View all Platform Link
