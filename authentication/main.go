@@ -38,7 +38,6 @@ func main() {
 
 	cmd.Execute(postgresqlAddress)
 
-	
     // Connect to PostgreSQL
     connStr := postgresqlAddress
     db, err = sql.Open("postgres", connStr)
@@ -92,7 +91,7 @@ func handleOAuthCallback(c *gin.Context) {
 				log.Printf("%e",err)
                 return
             }
-		} else if err != nil {
+		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 			log.Printf("%e",err)
 			return
