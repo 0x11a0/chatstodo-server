@@ -16,29 +16,40 @@
 // Import required modules
 const express = require("express");
 const userController = require("./userController");
+const { isAuthenticated } = require("./middleware/auth");
 
 // Create a new router instance
 const router = express.Router();
 
+const userRouter = express.Router();
+
+userRouter.get("/health", function (req, res) {
+  res.status(200).send("Service is healthy");
+});
+
+// add a router group for /users/api/v1
+userRouter.use(isAuthenticated);
+
 // Route to trigger a refresh of all user data
-// POST /users/:userId/refreshAll
-router.post("/:userId/refreshAll", userController.refreshAll);
+// POST /users/api/v1/:userId/refreshAll
+// router.post("/:userId/refreshAll", userController.refreshAll);
 
 // Route to get user data
-// GET /users/:userId/data
-router.get("/:userId/data", userController.getUserData);
+// GET /users/api/v1/:userId/data
+// router.get("/:userId/data", userController.getUserData);
 
 // Route to add a new platform link
-// POST /users/:userId/platforms
-router.post("/:userId/platforms", userController.addPlatformLink);
+// POST /users/api/v1/:userId/platforms
+userRouter.post("/:userId/platforms", userController.addPlatformLink);
 
 // Route to remove an existing platform link
-// DELETE /users/:userId/platforms
-router.delete("/:userId/platforms", userController.removePlatformLink);
+// DELETE /users/api/v1/:userId/platforms
+userRouter.delete("/:userId/platforms", userController.removePlatformLink);
 
 // Route to get all platform links for a user
-// GET /users/:userId/platforms
-router.get("/:userId/platforms", userController.getPlatformLink);
+// GET /users/api/v1/:userId/platforms
+userRouter.get("/:userId/platforms", userController.getPlatformLink);
 
+router.use("/users/api/v1", userRouter);
 // Export the router
 module.exports = router;

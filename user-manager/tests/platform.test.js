@@ -39,14 +39,14 @@ let userId;
 /**
  * Test function to refresh all user data.
  */
-async function refreshAllUserData() {
-  try {
-    const response = await axios.post(`${BASE_URL}/users/${userId}/refreshAll`);
-    console.log("Refreshed all user data:", response.data);
-  } catch (error) {
-    console.error("Error refreshing user data:", error.response.data);
-  }
-}
+// async function refreshAllUserData() {
+//   try {
+//     const response = await axios.post(`${BASE_URL}/users/${userId}/refreshAll`);
+//     console.log("Refreshed all user data:", response.data);
+//   } catch (error) {
+//     console.error("Error refreshing user data:", error.response.data);
+//   }
+// }
 
 /**
  * Test function to add a platform link.
@@ -92,7 +92,7 @@ async function getPlatformLinks() {
 
 // Sequence to run the tests one after the other.
 (async function () {
-  await refreshAllUserData();
+  // await refreshAllUserData();
   await addPlatformLink();
   await removePlatformLink();
   await getPlatformLinks();

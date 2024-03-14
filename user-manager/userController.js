@@ -25,32 +25,36 @@ const protoLoader = require("@grpc/proto-loader");
 const path = require("path");
 
 // Load protobuf definitions
-const PROTO_PATH = path.join(__dirname, process.env.PROTO_PATH);
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
-const grpcObject = grpc.loadPackageDefinition(packageDefinition);
-const mlService = grpcObject.yourPackageName.YourServiceName; // Adjust these names based on your proto file
+// const PROTO_PATH = path.join(__dirname, process.env.PROTO_PATH);
+// const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
+// const grpcObject = grpc.loadPackageDefinition(packageDefinition);
+// const mlService = grpcObject.yourPackageName.YourServiceName; // Adjust these names based on your proto file
 
-// Create a gRPC client instance
-const client = new mlService(
-  "localhost:50051",
-  grpc.credentials.createInsecure()
-); // Adjust the address and port as necessary
+// // Create a gRPC client instance
+// const client = new mlService(
+//   "localhost:50051",
+//   grpc.credentials.createInsecure()
+// ); // Adjust the address and port as necessary
 
 // (TO BE CREATED) Function to communicate with ML Serverless Functions via gRPC
-const mlServerlessFunctions = require("./mlServerlessFunctions");
+// const mlServerlessFunctions = require("./mlServerlessFunctions");
 
 exports.refreshAll = async (req, res) => {
   try {
     const userId = req.params.userId;
 
-    client.processLatestMessages({ userId }, (error, response) => {
-      if (error) {
-        return res.status(500).send({ error: error.message });
-      }
-      res.status(200).send({
-        message: "Refresh all requested successfully.",
-        data: response,
-      });
+    // client.processLatestMessages({ userId }, (error, response) => {
+    //   if (error) {
+    //     return res.status(500).send({ error: error.message });
+    //   }
+    //   res.status(200).send({
+    //     message: "Refresh all requested successfully.",
+    //     data: response,
+    //   });
+    // });
+    res.status(200).send({
+      message: "Refresh all requested successfully.",
+      data: [],
     });
   } catch (error) {
     res.status(500).send({ error: error.message });
@@ -59,14 +63,15 @@ exports.refreshAll = async (req, res) => {
 
 exports.getUserData = async (req, res) => {
   try {
-    const userId = req.params.userId;
-    // Fetching logic, actual implementation depends on ML serverless DB structure and models
-    const userData = {
-      tasks: await Task.find({ userId }), // Assuming Task model exists after fetching
-      events: await Event.find({ userId }), // Assuming Event model exists after fetching
-      summaries: await Summary.find({ userId }), // Assuming Summary model exists after fetching
-    };
-    res.status(200).send(userData);
+    // const userId = req.params.userId;
+    // // Fetching logic, actual implementation depends on ML serverless DB structure and models
+    // const userData = {
+    //   tasks: await Task.find({ userId }), // Assuming Task model exists after fetching
+    //   events: await Event.find({ userId }), // Assuming Event model exists after fetching
+    //   summaries: await Summary.find({ userId }), // Assuming Summary model exists after fetching
+    // };
+
+    res.status(200).send({});
   } catch (error) {
     res.status(500).send({ error: error.message });
   }
