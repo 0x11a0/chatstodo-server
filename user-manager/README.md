@@ -142,6 +142,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Endpoint:** `/bots`
    - **Method:** `GET`
    - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
    - **Expected Output:**
 
    ```json
