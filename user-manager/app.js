@@ -29,7 +29,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Use our routes with the Express application
-app.use(userRoutes); // Here '/api' is a base endpoint. Adjust as needed.
+app.use(userRoutes);
 
 // Error handling middleware
 

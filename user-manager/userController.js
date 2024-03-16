@@ -39,7 +39,7 @@ const path = require("path");
 // (TO BE CREATED) Function to communicate with ML Serverless Functions via gRPC
 // const mlServerlessFunctions = require("./mlServerlessFunctions");
 
-exports.refreshAll = async (req, res) => {
+exports.getSummary = async (req, res) => {
   try {
     const userId = req.params.userId;
 
@@ -56,22 +56,6 @@ exports.refreshAll = async (req, res) => {
       message: "Refresh all requested successfully.",
       data: [],
     });
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-};
-
-exports.getUserData = async (req, res) => {
-  try {
-    // const userId = req.params.userId;
-    // // Fetching logic, actual implementation depends on ML serverless DB structure and models
-    // const userData = {
-    //   tasks: await Task.find({ userId }), // Assuming Task model exists after fetching
-    //   events: await Event.find({ userId }), // Assuming Event model exists after fetching
-    //   summaries: await Summary.find({ userId }), // Assuming Summary model exists after fetching
-    // };
-
-    res.status(200).send({});
   } catch (error) {
     res.status(500).send({ error: error.message });
   }

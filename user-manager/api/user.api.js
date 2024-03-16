@@ -15,7 +15,8 @@ require("dotenv").config();
 const axios = require("axios");
 
 // Base URL of your server, defaulting to localhost.
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL =
+  "http://localhost:" + process.env.USER_MANAGER_PORT || 8081 + "/api";
 
 // Sample user data for testing.
 const testUser = {

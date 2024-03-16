@@ -32,11 +32,7 @@ userRouter.use(isAuthenticated);
 
 // Route to trigger a refresh of all user data
 // POST /users/api/v1/:userId/refreshAll
-// router.post("/:userId/refreshAll", userController.refreshAll);
-
-// Route to get user data
-// GET /users/api/v1/:userId/data
-// router.get("/:userId/data", userController.getUserData);
+router.get("/:userId/summary", userController.getSummary);
 
 // Route to add a new platform link
 // POST /users/api/v1/:userId/platforms
