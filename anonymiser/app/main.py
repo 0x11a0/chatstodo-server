@@ -1,4 +1,6 @@
+import json
 import os
+import re
 from os.path import join, dirname
 from dotenv import load_dotenv
 
@@ -22,8 +24,29 @@ conf = {
     'auto.offset.reset': 'earliest'
 }
 
+
 consumer = Consumer(**conf)
 consumer.subscribe([topic])
+
+file_path = 'emails.json'
+
+def load_email_mapping():
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            try:
+                return json.load(file)
+            except json.JSONDecodeError:
+                return {}
+    else:
+        return {}
+
+def save_email_mapping(email_mapping):
+    with open(file_path, 'w') as file:  # Open the file in write mode
+        json.dump(email_mapping, file, indent=4)
+    print(f"Data written to {file_path}:", email_mapping)
+
+email_mapping = load_email_mapping()
+email_counter = max([int(email.split('test')[1].split('@')[0]) for email in email_mapping.values()], default=0) + 1
 
 try:
     print("Starting anonymiser")
@@ -39,7 +62,22 @@ try:
             elif msg.error():
                 raise KafkaException(msg.error())
         else:
-            print(f"Received message: {msg.value().decode('utf-8')}")
+            resp = msg.value().decode('utf-8')
+            # print(f"Received message: {resp}")
+            json_msg = json.loads(resp)
+            msg = json_msg['message']
+            pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+            matches = re.findall(pattern, msg)
+            for match in matches:
+                anonymised_email = f'test{email_counter}@{match.split("@")[1]}'
+                email_mapping[match] = anonymised_email
+                email_counter += 1
+                message_content = msg.replace(match, anonymised_email)
+            print("Anonymized message:", message_content)
+            print(email_mapping)
+            save_email_mapping(email_mapping)
+
+            
 finally:
     # Clean up on exit
     consumer.close()
