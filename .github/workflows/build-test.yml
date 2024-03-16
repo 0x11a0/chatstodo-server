@@ -16,12 +16,12 @@ jobs:
           - service: "anonymiser"
             language: "python"
             python-version: "3.8"
-          # - service: "authentication"
-          #   language: "node"
-          #   node-version: "14"
-          # - service: "user-manager"
-          #   language: "node"
-          #   node-version: "14"
+          - service: "authentication"
+            language: "go"
+            go-version: "1.21.3"
+          - service: "user-manager"
+            language: "node"
+            node-version: "14"
 
     steps:
       - name: Checkout code
@@ -39,15 +39,27 @@ jobs:
           cd ./${{ matrix.service }}
           pip install -r requirements.txt
 
-      # - name: Set up Node.js
-      #   if: ${{ matrix.language == 'node' }}
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: ${{ matrix.node-version }}
+      - name: Set up Node.js
+        if: ${{ matrix.language == 'node' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
 
-      # - name: Install Node dependencies and build
-      #   if: ${{ matrix.language == 'node' }}
-      #   run: |
-      #     cd ./${{ matrix.service }}
-      #     npm install
-      #     npm run build
+      - name: Install Node dependencies and build
+        if: ${{ matrix.language == 'node' }}
+        run: |
+          cd ./${{ matrix.service }}
+          npm install
+
+      - name: Set up Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Install Go dependencies
+        if: matrix.language == 'go'
+        run: |
+          cd ./${{ matrix.service }}
+          go mod tidy
+          go mod download
