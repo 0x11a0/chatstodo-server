@@ -1,17 +1,18 @@
 # ChatsTodo - Server
 
-### Overview
+## Overview
 
-Handles the retrieval and management of user data, including tasks, events, and summaries, from the ML Serverless Functions.
+User Manager Service is an aggregator service that handles the retrieval and management of user data, including tasks, events, and summaries. It sits in the middle of Web Client, Bots and ML Serverless functions.
 
-#### Table of Contents
+## Table of Contents
 
 1. [Installation and Setup](#installation-and-setup)
-2. [API Usage](#api-usage)
-3. [Directory Structure](#directory-structure)
-4. [Testing](#testing)
+1. [Interactions with other services](#interactions-with-other-services)
+1. [API Usage](#api-usage)
+1. [Directory Structure](#directory-structure)
+1. [Testing](#testing)
 
-#### Installation and Setup
+## Installation and Setup
 
 1. **Clone the repository**:
 
@@ -20,13 +21,13 @@ Handles the retrieval and management of user data, including tasks, events, and 
    cd chatstodo-server/user-manager
    ```
 
-2. **Install dependencies**:
+1. **Install dependencies**:
 
    ```bash
    npm install
    ```
 
-3. **Set up your environment**:
+1. **Set up your environment**:
 
    Copy `env.example` to a new file named `.env`:
 
@@ -37,7 +38,7 @@ Handles the retrieval and management of user data, including tasks, events, and 
    Ensure you update `.env` with the required environment variables.
    Ensure you have MongoDB installed and running locally.
 
-4. **Start the server**:
+1. **Start the server**:
 
    ```bash
    npm test
@@ -45,7 +46,19 @@ Handles the retrieval and management of user data, including tasks, events, and 
 
    By default, the server runs on `http://localhost:3000`.
 
-#### API Usage
+## Interactions with other services
+
+#### Bots
+
+User Manager Service is in charge of linking the platforms where the bots reside to the user account. This allows us to make a connection to the platform and the groups that the user is tracking.
+
+#### Web Client
+
+#### ML Serverless functions
+
+## gRPC Service for Bots
+
+## API Usage for Web Client
 
 **Base URL**: `http://localhost:8081/users/api/v1`
 
@@ -63,36 +76,10 @@ Handles the retrieval and management of user data, including tasks, events, and 
    }
    ```
 
-   Endpoint: `/users/logoutAll`
+1. **Get summary** (WIP)
 
-   Method: `POST`
-
-   Headers:
-
-   ```json
-   {
-     "Authorization": "Bearer <Your-Token>"
-   }
-   ```
-
-1. **Refresh All User Data** (WIP)
-
-   - **Endpoint:** `/users/:userId/refreshAll`
+   - **Endpoint:** `/summary`
    - **Method:** `POST`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
-   - **Body:** _None required_
-   - **Expected Output:**
-
-   ```json
-   {
-     "message": "Refresh all requested successfully."
-   }
-   ```
-
-1. **Get User Data** (WIP)
-
-   - **Endpoint:** `/users/:userId/data`
-   - **Method:** `GET`
    - **URL Parameters:** Replace `:userId` with the actual user ID.
    - **Body:** _None required_
    - **Expected Output:**
@@ -105,19 +92,18 @@ Handles the retrieval and management of user data, including tasks, events, and 
    }
    ```
 
-1. **Add Platform Link**
+1. **Add bot platform**
 
-   - **Endpoint:** `/users/:userId/platforms`
+   - **Endpoint:** `/bots`
    - **Method:** `POST`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Payload:** Insert JWT with user id in it
    - **Body:**
 
    ```json
    {
      "platform": "Telegram",
      "credentials": {
-       "token": "abc123",
-       "otherKey": "value"
+       "token": "abc123"
      }
    }
    ```
@@ -126,15 +112,15 @@ Handles the retrieval and management of user data, including tasks, events, and 
 
    ```json
    {
-     "message": "Platform link added successfully."
+     "message": "Bot platform added successfully."
    }
    ```
 
-1. **Remove Platform Link**
+1. **Remove bot platform**
 
-   - **Endpoint:** `/users/:userId/platforms`
+   - **Endpoint:** `/bots`
    - **Method:** `DELETE`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Payload:** Insert JWT with user id in it
    - **Body:**
 
    ```json
@@ -151,27 +137,26 @@ Handles the retrieval and management of user data, including tasks, events, and 
    }
    ```
 
-1. **Get All Platform Links**
+1. **Get all connected bot platforms**
 
-   - **Endpoint:** `/users/:userId/platforms`
+   - **Endpoint:** `/bots`
    - **Method:** `GET`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
-   - **Body:** _None required_
+   - **Payload:** Insert JWT with user id in it
    - **Expected Output:**
 
    ```json
    [
        {
-           "platformName": "Telegram",
+           "platform": "Telegram",
            "credentials": {
                "token": "abc123",
-               "otherKey": "value"
            }
        },
        ...
    ]
    ```
 
+1. **Logout**
    Endpoint: `/users/logoutAll`
 
    Method: `POST`
@@ -184,7 +169,9 @@ Handles the retrieval and management of user data, including tasks, events, and 
    }
    ```
 
-#### Directory Structure
+## gRPC Service for ML Serverless Functions
+
+## Directory Structure
 
 Here's an overview of the main directories and files:
 
@@ -206,7 +193,7 @@ Here's an overview of the main directories and files:
     └── platform.test.js      # User-related tests using Axios
 ```
 
-#### Testing
+## Testing
 
 To test user-related functionalities, use the `platform.test.js` script. This script, built with Axios, tests the following:
 
