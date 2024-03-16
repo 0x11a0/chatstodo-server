@@ -1,3 +1,211 @@
-# User Manager
+# ChatsTodo - Server
 
-### Overview
+## Overview
+
+User Manager Service is an aggregator service that handles the retrieval and management of user data, including tasks, events, and summaries. It sits in the middle of Web Client, Bots and ML Serverless functions.
+
+## Table of Contents
+
+1. [Installation and Setup](#installation-and-setup)
+1. [Interactions with other services](#interactions-with-other-services)
+1. [API Usage](#api-usage)
+1. [Directory Structure](#directory-structure)
+1. [Testing](#testing)
+
+## Installation and Setup
+
+1. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/lucasodra/chatstodo-server
+   cd chatstodo-server/user-manager
+   ```
+
+1. **Install dependencies**:
+
+   ```bash
+   npm install
+   ```
+
+1. **Set up your environment**:
+
+   Copy `env.example` to a new file named `.env`:
+
+   ```bash
+   cp env.example .env
+   ```
+
+   Ensure you update `.env` with the required environment variables.
+   Ensure you have MongoDB installed and running locally.
+
+1. **Start the server**:
+
+   ```bash
+   npm test
+   ```
+
+   By default, the server runs on `http://localhost:3000`.
+
+## Interactions with other services
+
+#### Bots
+
+User Manager Service is in charge of linking the platforms where the bots reside to the user account. This allows us to make a connection to the platform and the groups that the user is tracking.
+
+#### Web Client
+
+#### ML Serverless functions
+
+## gRPC Service for Bots
+
+## API Usage for Web Client
+
+**Base URL**: `http://localhost:8081/users/api/v1`
+
+1. **Health**
+
+   - **Endpoint:** `/health`
+   - **Method:** `GET`
+   - **URL Parameters:** _None required_
+   - **Body:** _None required_
+   - **Expected Output:**
+
+   ```json
+   {
+     "Service is healthy"
+   }
+   ```
+
+1. **Get summary** (WIP)
+
+   - **Endpoint:** `/summary`
+   - **Method:** `POST`
+   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Body:** _None required_
+   - **Expected Output:**
+
+   ```json
+   {
+       "tasks": [...],
+       "events": [...],
+       "summaries": [...]
+   }
+   ```
+
+1. **Add bot platform**
+
+   - **Endpoint:** `/bots`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:**
+
+   ```json
+   {
+     "platform": "Telegram",
+     "credentials": {
+       "token": "abc123"
+     }
+   }
+   ```
+
+   - **Expected Output:**
+
+   ```json
+   {
+     "message": "Bot platform added successfully."
+   }
+   ```
+
+1. **Remove bot platform**
+
+   - **Endpoint:** `/bots`
+   - **Method:** `DELETE`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:**
+
+   ```json
+   {
+     "platform": "Telegram"
+   }
+   ```
+
+   - **Expected Output:**
+
+   ```json
+   {
+     "message": "Platform link removed successfully."
+   }
+   ```
+
+1. **Get all connected bot platforms**
+
+   - **Endpoint:** `/bots`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+   ```json
+   [
+       {
+           "platform": "Telegram",
+           "credentials": {
+               "token": "abc123",
+           }
+       },
+       ...
+   ]
+   ```
+
+1. **Logout**
+   Endpoint: `/users/logoutAll`
+
+   Method: `POST`
+
+   Headers:
+
+   ```json
+   {
+     "Authorization": "Bearer <Your-Token>"
+   }
+   ```
+
+## gRPC Service for ML Serverless Functions
+
+## Directory Structure
+
+Here's an overview of the main directories and files:
+
+```
+.
+├── LICENSE
+├── README.md
+├── app.js                # Main application entry point
+├── env.example           # Example environment file
+├── userController.js  # Controller functions for routes
+├── userRoutes.js       # Route definitions
+├── generate.key.js       # Key generator utility
+├── index.js              # Server initialization
+├── middleware/
+│   └── auth.js           # Authentication middleware
+├── models/
+│   └── Platform.js           # User Mongoose model
+└── test/
+    └── platform.test.js      # User-related tests using Axios
+```
+
+## Testing
+
+To test user-related functionalities, use the `platform.test.js` script. This script, built with Axios, tests the following:
+
+1. Creating Platform Link
+2. Removing Platform Link
+3. View all Platform Link
+
+To run the test:
+
+```bash
+node test/user.test.js
+```
+
+---
