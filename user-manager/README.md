@@ -92,19 +92,18 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
-1. **Add bot platform**
+1. **Add bot platform** (WIP)
 
-   - **Endpoint:** `/bots`
+   - **Endpoint:** `/platforms`
    - **Method:** `POST`
    - **Payload:** Insert JWT with user id in it
    - **Body:**
 
    ```json
    {
+     "userId": "<id>",
      "platform": "Telegram",
-     "credentials": {
-       "token": "abc123"
-     }
+     "verificationCode": "<verification code>"
    }
    ```
 
@@ -112,13 +111,16 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
    ```json
    {
-     "message": "Bot platform added successfully."
+     "message": "Platform link added successfully."
    }
    ```
 
+   - **Remarks**
+     Left the implementation of inserting the mapping into database
+
 1. **Remove bot platform**
 
-   - **Endpoint:** `/bots`
+   - **Endpoint:** `/platforms`
    - **Method:** `DELETE`
    - **Payload:** Insert JWT with user id in it
    - **Body:**
@@ -139,7 +141,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 1. **Get all connected bot platforms**
 
-   - **Endpoint:** `/bots`
+   - **Endpoint:** `/platforms`
    - **Method:** `GET`
    - **Payload:** Insert JWT with user id in it
    - **Body:** _None required_

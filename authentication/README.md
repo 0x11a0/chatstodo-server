@@ -89,6 +89,28 @@ Initiates an OAuth flow and includes the email to get the signed JWT.
     }
     ```
 
+---
+
+### POST /auth/api/v1/bot/request-code
+
+Generate a code for the user to enter into web client. This links their platform id to their ChatsTodo id.
+
+- Parameters:
+  | Name | Required | Type | Description |
+  | ------: | :------: | :----: | ----------------------------------------------------- |
+  | `userId` | required | string | The user's ID of the platform |
+  | `platform` | required | string | The platform where the user is requesting from |
+
+- Response: `200 OK`
+
+  ```json
+  {
+    "verification_code": "<code>"
+  }
+  ```
+
+- Error Responses: WIP
+
 ## Setup and Configuration
 
 To set up the Authentication Service, ensure that the necessary environment variables are defined in your `.env` file, including `USER_POSTGRESQL_URL` for your PostgreSQL connection string and `JWT_SECRET_KEY` for JWT signing.

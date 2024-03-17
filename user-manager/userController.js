@@ -78,7 +78,7 @@ exports.addPlatformLink = async (req, res) => {
 
     const { userId, platform, verificationCode } = req.body;
 
-    const verificationKey = `user_verification:${userId}`;
+    const verificationKey = `user_verification:${userId}:${platform}`;
     const storedVerificationCode = await redisClient.get(verificationKey);
 
     if (!storedVerificationCode) {
