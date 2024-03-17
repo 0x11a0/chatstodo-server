@@ -1,22 +1,22 @@
 version: "3.8"
 services:
-  authentication:
-    build:
-      context: ./authentication
-      dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
-    env_file:
-      - .env
+  # authentication:
+  #   build:
+  #     context: ./authentication
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8080:8080"
+  #   env_file:
+  #     - .env
 
-  user-manager:
-    build:
-      context: ./user-manager
-      dockerfile: Dockerfile
-    ports:
-      - "8081:8081"
-    env_file:
-      - .env
+  # user-manager:
+  #   build:
+  #     context: ./user-manager
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "8081:8081"
+  #   env_file:
+  #     - .env
 
   anonymiser:
     build:
