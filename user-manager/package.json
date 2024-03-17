@@ -1,0 +1,31 @@
+{
+  "name": "express_starter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "express"
+  ],
+  "author": "Lucas Liao",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.10.2",
+    "axios": "^1.5.0",
+    "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.2",
+    "nodemon": "^3.0.1",
+    "supertest": "^6.3.3"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

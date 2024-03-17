@@ -8,31 +8,41 @@ The anonymiser service receives messages from the Kafka topic, `chat-messages` t
 
 1. Initialise the environments
 
-    ```bash
-    pip install virtualenv
-    virtualenv venv
-    
-    // for mac users
-    source venv/bin/activate 
+   ```bash
+   pip install virtualenv
+   virtualenv venv
 
-    // for window users
-    cd venv/bin/
-    activate.bat
-    cd ../..
+   // for mac users
+   source venv/bin/activate
 
-    pip install -r requirements.txt
-    ```
+   // for window users
+   cd venv/bin/
+   activate.bat
+   cd ../..
+
+   pip install -r requirements.txt
+   ```
 
 2. Insert environment variables
 
-    Insert your own environment variables that is connected to a Kakfa cluster.
+   Insert your own environment variables that is connected to a Kakfa cluster.
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env
+   ```
 
 3. Run the service
 
-    ```bash
-    python main.py
-    ```
+   ```bash
+   python main.py
+   ```
+
+### Other issues
+
+If you face SSL issues (CERTIFICATE_VERIFY_FAILED), run the following command:
+
+```bash
+pip install --upgrade certifi
+python -m certifi
+export SSL_CERT_FILE=$(python -m certifi)
+```
