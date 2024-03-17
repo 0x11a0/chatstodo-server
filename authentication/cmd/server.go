@@ -9,33 +9,37 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
-func ExecuteAPIServer(databaseConnection *sql.DB, jwtKey []byte) {	
+func ExecuteAPIServer(databaseConnection *sql.DB, redisClient *redis.Client, jwtKey []byte) {	
     // Initialize Gin
     r := gin.Default()
 
 	authGroup := r.Group("/auth/api/v1")
 	{
 		// ping health including db
-		authGroup.GET("/health", healthHandler(databaseConnection))
+		authGroup.GET("/health", healthHandler(databaseConnection, redisClient))
 
-		authGroup.GET("/bot/connect", botConnectHandler(databaseConnection))
+		authGroup.GET("/bot/connect", botConnectHandler(redisClient))
 
 		// OAuth callback endpoint
 		authGroup.POST("/oauth/google/callback", OAuthCallbackHandler(databaseConnection, jwtKey))
 	}
 
-	
     if err := r.Run(":8080"); err != nil {
         log.Fatal("Failed to run server: ", err)
     }
 }
 
 
-func healthHandler(db *sql.DB) gin.HandlerFunc {
+func healthHandler(dbConnection *sql.DB, redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if err := db.PingContext(c); err != nil {
+		if err := dbConnection.PingContext(c); err != nil {
+			c.JSON(http.StatusFailedDependency, gin.H{"error": "Service temporarily unavailable"})
+			return
+		}
+		if err := redisClient.Ping(c).Err(); err != nil {
 			c.JSON(http.StatusFailedDependency, gin.H{"error": "Service temporarily unavailable"})
 			return
 		}
@@ -44,13 +48,9 @@ func healthHandler(db *sql.DB) gin.HandlerFunc {
 }
 
 
-func botConnectHandler(db *sql.DB) gin.HandlerFunc {
+func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if err := db.PingContext(c); err != nil {
-			c.JSON(http.StatusFailedDependency, gin.H{"error": "Service temporarily unavailable"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"message": "Service is running"})
+		c.JSON(http.StatusOK, gin.H{"message": "connected"})
 	}
 }
 

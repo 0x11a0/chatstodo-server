@@ -47,10 +47,10 @@ func main() {
     if err != nil {
         panic(err)
     }
-	rdb := redis.NewClient(opts)
+	redisClient := redis.NewClient(opts)
 
 	// Pinging the Redis server
-	_, err = rdb.Ping(ctx).Result()
+	_, err = redisClient.Ping(ctx).Result()
 	if err != nil {
 		fmt.Println("Error connecting to Redis:", err)
 		return
@@ -58,7 +58,7 @@ func main() {
 	log.Println("Connected to Redis")
 
 	cmd.ExecuteCLI(db)
-	cmd.ExecuteAPIServer(db, jwtKey)
+	cmd.ExecuteAPIServer(db, redisClient, jwtKey)
 
     
 }
