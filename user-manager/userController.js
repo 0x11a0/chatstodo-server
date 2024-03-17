@@ -20,6 +20,10 @@
 // Import required modules, models, and gRPC client setup
 // const User = require('./User');
 const Platform = require("./models/Platform");
+const redisClient = require("./redisClient");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const path = require("path");
@@ -61,15 +65,44 @@ exports.getSummary = async (req, res) => {
   }
 };
 
+// TODO: Insert the data into the database
 exports.addPlatformLink = async (req, res) => {
   try {
-    const { userId, platform, credentials } = req.body;
-    const platformLink = new Platform({
-      userId,
-      platformName: platform,
-      credentials,
-    });
-    await platformLink.save();
+    const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const jwtUserId = decoded.userId;
+
+    if (jwtUserId == null) {
+      return res.status(401).send({ error: "Unauthorized." });
+    }
+
+    const { userId, platform, verificationCode } = req.body;
+
+    const verificationKey = `user_verification:${userId}`;
+    const storedVerificationCode = await redisClient.get(verificationKey);
+
+    if (!storedVerificationCode) {
+      return res
+        .status(404)
+        .send({ error: "Verification details not found for user." });
+    }
+
+    if (storedVerificationCode !== verificationCode) {
+      return res.status(400).send({ error: "Incorrect verification code." });
+    }
+
+    // const platformLink = new Platform({
+    //   jwtUserId,
+    //   platformName: platform,
+    //   credentials: {
+    //     userId: userId,
+    //   },
+    // });
+
+    // await platformLink.save();
+
+    await redisClient.del(verificationKey);
+
     res.status(201).send({ message: "Platform link added successfully." });
   } catch (error) {
     res.status(400).send({ error: error.message });

@@ -24,7 +24,7 @@ const router = express.Router();
 const userRouter = express.Router();
 
 userRouter.get("/health", function (req, res) {
-  res.status(200).send("Service is healthy");
+  res.status(200).send({ message: "Service is healthy" });
 });
 
 // add a router group for /users/api/v1
