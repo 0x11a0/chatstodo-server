@@ -8,18 +8,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func MigrateDatabase(address string) {
-	CreateUsersTable(address)
+func MigrateDatabase(databaseConnection *sql.DB) {
+	CreateUsersTable(databaseConnection)
 }
 
-func CreateUsersTable(address string) {
-	// Connect to the database
-	db, err := sql.Open("postgres", address)
-	if err != nil {
-		log.Fatalf("Could not connect to the database: %v", err)
-	}
-	defer db.Close()
-
+func CreateUsersTable(databaseConnection *sql.DB) {
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS users (
 		id UUID PRIMARY KEY,
@@ -28,7 +21,7 @@ func CreateUsersTable(address string) {
 	);`
 
 	// Execute the SQL statement to create the table
-	if _, err := db.Exec(createTableSQL); err != nil {
+	if _, err := databaseConnection.Exec(createTableSQL); err != nil {
 		log.Fatalf("Failed to execute query: %v", err)
 	} else {
 		fmt.Println("Users table created successfully.")

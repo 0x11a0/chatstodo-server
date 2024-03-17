@@ -1,7 +1,8 @@
-package cli
+package cmd
 
 import (
 	"chatstodo/authentication/internal/db"
+	"database/sql"
 	"fmt"
 	"os"
 
@@ -11,7 +12,7 @@ import (
 
 var (
 	rootCmd     = &cobra.Command{Use: "myapp"}
-	postgreAddress string
+	databaseConnection *sql.DB
 )
 
 
@@ -21,14 +22,13 @@ var migrateCmd = &cobra.Command{
     Short: "Migrate the database",
     Long:  `This command will create the users table in the database.`,
     Run: func(cmd *cobra.Command, args []string) {
-        db.MigrateDatabase(postgreAddress)
+        db.MigrateDatabase(databaseConnection)
 		os.Exit(1)
     },
 }
 
-func Execute(address string) {
+func ExecuteCLI(databaseConnection *sql.DB) {
 
-	postgreAddress = address
     rootCmd.AddCommand(migrateCmd)
 
 	if err := rootCmd.Execute(); err != nil {
