@@ -2,6 +2,7 @@ import json
 import os
 import re
 from os.path import dirname
+from time import sleep
 from dotenv import load_dotenv
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
@@ -27,11 +28,19 @@ def save_email_mapping(email_mapping, file_path):
     print(f"Data written to {file_path}:", email_mapping)
 
 
+def enforce_string(message):
+    if isinstance(message, dict):
+        return {k: enforce_string(v) for k, v in message.items()}
+    elif isinstance(message, list):
+        return [enforce_string(item) for item in message]
+    else:
+        return str(message)
+
+
 def main():
     print("Starting anonymiser")
 
     dotenv_path = os.path.join(dirname(dirname(dirname(__file__))), '.env')
-    print(dotenv_path)
     if os.path.exists(dotenv_path):
         load_dotenv(dotenv_path)
 
@@ -77,6 +86,8 @@ def main():
             else:
                 resp = msg.value().decode('utf-8')
                 json_msg = json.loads(resp)
+                json_msg = enforce_string(json_msg)
+
                 msg = json_msg['message']
 
                 pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
