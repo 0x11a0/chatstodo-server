@@ -35,16 +35,16 @@ userRouter.use(isAuthenticated);
 router.get("/:userId/summary", userController.getSummary);
 
 // Route to add a new platform link
-// POST /users/api/v1/bots
-userRouter.post("/bots", userController.addPlatformLink);
+// POST /users/api/v1/platforms
+userRouter.post("/platforms", userController.addPlatformLink);
 
 // Route to remove an existing platform link
-// DELETE /users/api/v1/bots
-userRouter.delete("/bots", userController.removePlatformLink);
+// DELETE /users/api/v1/platforms
+userRouter.delete("/platforms", userController.removePlatformLink);
 
 // Route to get all platform links for a user
-// GET /users/api/v1/bots
-userRouter.get("/bots", userController.getPlatformLink);
+// GET /users/api/v1/platforms
+userRouter.get("/platforms", userController.getPlatformLink);
 
 router.use("/users/api/v1", userRouter);
 // Export the router
