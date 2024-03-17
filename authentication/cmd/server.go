@@ -20,8 +20,10 @@ func ExecuteAPIServer(databaseConnection *sql.DB, jwtKey []byte) {
 		// ping health including db
 		authGroup.GET("/health", healthHandler(databaseConnection))
 
+		authGroup.GET("/bot/connect", botConnectHandler(databaseConnection))
+
 		// OAuth callback endpoint
-		authGroup.POST("/oauth/google/callback", handleOAuthCallback(databaseConnection, jwtKey))
+		authGroup.POST("/oauth/google/callback", OAuthCallbackHandler(databaseConnection, jwtKey))
 	}
 
 	
@@ -42,7 +44,17 @@ func healthHandler(db *sql.DB) gin.HandlerFunc {
 }
 
 
-func handleOAuthCallback(databaseConnection *sql.DB, jwtKey []byte) gin.HandlerFunc {
+func botConnectHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if err := db.PingContext(c); err != nil {
+			c.JSON(http.StatusFailedDependency, gin.H{"error": "Service temporarily unavailable"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Service is running"})
+	}
+}
+
+func OAuthCallbackHandler(databaseConnection *sql.DB, jwtKey []byte) gin.HandlerFunc {
 	var requestBody struct {
 		Email     string `json:"email"`
 	}
