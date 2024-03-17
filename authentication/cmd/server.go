@@ -2,10 +2,15 @@ package cmd
 
 import (
 	"chatstodo/authentication/internal/utils"
+	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"net/mail"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -18,10 +23,10 @@ func ExecuteAPIServer(databaseConnection *sql.DB, redisClient *redis.Client, jwt
 
 	authGroup := r.Group("/auth/api/v1")
 	{
-		// ping health including db
+		// ping health including db and redis
 		authGroup.GET("/health", healthHandler(databaseConnection, redisClient))
 
-		authGroup.GET("/bot/connect", botConnectHandler(redisClient))
+		authGroup.POST("/bot/connect", botConnectHandler(redisClient))
 
 		// OAuth callback endpoint
 		authGroup.POST("/oauth/google/callback", OAuthCallbackHandler(databaseConnection, jwtKey))
@@ -49,9 +54,46 @@ func healthHandler(dbConnection *sql.DB, redisClient *redis.Client) gin.HandlerF
 
 
 func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "connected"})
+	var requestBody struct {
+		UserId     string `json:"userId"`
 	}
+
+	return func(c *gin.Context) {
+
+		if err := c.ShouldBindJSON(&requestBody); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON request"})
+			return
+		}
+
+		if requestBody.UserId == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+			return
+		}
+
+		code := generateAuthCode()
+
+		ctx := context.Background()
+		err := storeUserIDAndAuthCodeMapping(ctx, redisClient, requestBody.UserId, code)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error storing user verification code"})
+			log.Printf("%v",err)
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"verification_code": code})
+	}
+}
+
+func storeUserIDAndAuthCodeMapping(ctx context.Context, redisClient *redis.Client, userId string, code string) error {
+	expiration := 10 * time.Minute
+	return redisClient.Set(ctx, fmt.Sprintf("user_verification:%s", userId), code, expiration).Err()
+}
+
+func generateAuthCode() string {
+	b := make([]byte, 6)
+    if _, err := rand.Read(b); err != nil {
+        return ""
+    }
+    return hex.EncodeToString(b)
 }
 
 func OAuthCallbackHandler(databaseConnection *sql.DB, jwtKey []byte) gin.HandlerFunc {
