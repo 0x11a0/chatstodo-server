@@ -21,6 +21,10 @@ const jwt = require("jsonwebtoken");
 
 // Middleware to check if the user is authenticated
 exports.isAuthenticated = async (req, res, next) => {
+  if (!req.headers.authorization) {
+    return res.status(401).send({ error: "No authorization token provided." });
+  }
+
   // Get the 'authorization' header from the incoming request
   const authHeader = req.headers.authorization;
 
@@ -38,9 +42,8 @@ exports.isAuthenticated = async (req, res, next) => {
   // If the verification is successful, decodedData will have the payload of the JWT.
   // If it's not successful (e.g., if the token has been tampered with),
   // it will throw an error, which you'd ideally catch in a production setup.
-  const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-  console.log(decodedData);
-
+  const decodedData = jwt.verify(token, process.env.JWT_SECRET_KEY);
+  
   // Assign the decoded data to the request object as 'user'.
   // This means in future middleware or route handlers, you can access the authenticated user's details via req.user.
   // req.user = await User.findById(decodedData._id);
