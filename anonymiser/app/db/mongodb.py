@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure
+from datetime import datetime, timedelta, timezone
 
 
 class MongoDBHandler:
@@ -29,3 +30,39 @@ class MongoDBHandler:
     def close_connection(self):
         self.client.close()
         print("Connection to MongoDB closed")
+        
+    # To call, use the following code:
+    # documents = mongo_handler.get_past_24hrs("<GROUP_ID>"), replace group id with your group id
+    # returns a list of documents corresponding to the chat messages
+    def get_past_24hrs(self, group_id, collection_name="Messages"):
+        collection = self.db[collection_name]
+        
+        # Calculate the timestamp 24 hours ago
+        # Can change timedelta accordingly to the time period you want to delete
+        twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(days=1)
+        
+        # Find documents matching the group_id and having a timestamp within the past 24 hours
+        documents = collection.find({
+            "group_id": group_id,
+            "timestamp": {"$gte": twenty_four_hours_ago}
+        })
+        
+        return list(documents)
+        
+    # To call, use the following code:
+    # deleted_count = mongo_handler.delete_past_24hrs("<GROUP_ID>"), replace group id with your group id
+    # returns number of documents deleted
+    def delete_past_24hrs(self, group_id, collection_name="Messages"):
+        collection = self.db[collection_name]
+        
+        # Calculate the timestamp 24 hours ago
+        # Can change timedelta accordingly to the time period you want to delete
+        twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(days=1)
+        
+        # Delete documents matching the group_id and having a timestamp within the past 24 hours
+        result = collection.delete_many({
+            "group_id": group_id,
+            "timestamp": {"$gte": twenty_four_hours_ago}
+        })
+        
+        return result.deleted_count
