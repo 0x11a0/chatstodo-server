@@ -1,12 +1,12 @@
 import json
 import os
 import re
-from os.path import join, dirname, abspath
+from os.path import dirname
 from dotenv import load_dotenv
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
-from mongodb import MongoDBHandler
+from db.mongodb import MongoDBHandler
 import re
 
 
