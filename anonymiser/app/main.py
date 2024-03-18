@@ -50,7 +50,7 @@ def main():
     UPSTASH_KAFKA_PASSWORD = os.getenv('UPSTASH_KAFKA_PASSWORD')
     MONGODB_URL = os.getenv('MONGODB_URL')
 
-    mongo_handler = MongoDBHandler(db_url=MONGODB_URL)
+    chats_db = MongoDBHandler(db_url=MONGODB_URL)
 
     conf = {
         'bootstrap.servers': UPSTASH_KAFKA_SERVER,
@@ -101,14 +101,14 @@ def main():
 
                 json_msg['message'] = msg
 
-                mongo_handler.insert_message(json_msg)
+                chats_db.insert_message(json_msg)
                 print(email_mapping)
                 save_email_mapping(email_mapping, file_path)
 
     finally:
         # Clean up on exit
         consumer.close()
-        mongo_handler.close_connection()
+        chats_db.close_connection()
 
 
 if __name__ == "__main__":
