@@ -16,6 +16,7 @@ class MongoDBHandler:
             self.client = MongoClient(self.db_url)
             # test connection
             self.client.admin.command('ping')
+            print("Ping successful: Mongo database is available")
             self.db = self.client[self.db_name]
             print("Connected to MongoDB")
         except ConnectionFailure:
