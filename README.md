@@ -31,3 +31,7 @@ This repo contains three services.
     ```
     docker compose down
     ```
+
+```
+docker network create chatstodo
+```
