@@ -1,6 +1,6 @@
-import psycopg
+import psycopg2
+from psycopg2.extras import DictCursor
 from datetime import datetime, timedelta
-from psycopg.rows import dict_row
 
 
 class PostgresHandler:
@@ -10,22 +10,21 @@ class PostgresHandler:
 
     def connect_to_db(self):
         try:
-            self.conn = psycopg.connect(self.db_url, row_factory=dict_row)
+            self.conn = psycopg2.connect(self.db_url)
+            self.conn.autocommit = True
             if self.ping():
                 print("Connected to PostgreSQL")
                 self.initialise_tables()
             else:
-                raise Exception("Failed to connect to PostgreSQL")
+                raise Exception("Ping to PostgreSQL failed")
         except Exception as e:
             print(f"Failed to connect to PostgreSQL: {e}")
             raise
 
     def ping(self):
         try:
-            # Attempt to open a cursor and execute a simple query
             with self.conn.cursor() as cur:
                 cur.execute('SELECT 1')
-                # If the query succeeds, the database is available
                 if cur.fetchone():
                     print("Ping successful: PostgreSQL database is available")
                     return True
@@ -35,7 +34,6 @@ class PostgresHandler:
 
     def initialise_tables(self):
         with self.conn.cursor() as cur:
-            # create the mapping
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS token_vault (
                     id SERIAL PRIMARY KEY,
@@ -45,7 +43,6 @@ class PostgresHandler:
                     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-            self.conn.commit()
 
         print("Table initialised successfully.")
 
@@ -53,40 +50,38 @@ class PostgresHandler:
         with self.conn.cursor() as cur:
             sql = "INSERT INTO token_vault (anonymised, original, token_type) VALUES (%s, %s, %s)"
             cur.execute(sql, (anonymised, original, token_type))
-            self.conn.commit()
+
         print("Token inserted")
 
-    def insert_email_mapping(self, email_mapping):
-        self.insert_tokens_mapping(email_mapping, "email")
-        print("All email mappings inserted successfully.")
-
     def insert_tokens_mapping(self, email_mapping, token_type):
-        with self.conn.transaction():
+        with self.conn.cursor() as cur:
             for original, anonymised in email_mapping.items():
-                with self.conn.cursor() as cur:
-                    sql = """
-                        INSERT INTO token_vault (anonymised, original, token_type)
-                        VALUES (%s, %s, %s)
-                        ON CONFLICT (original) DO NOTHING;
-                    """
-                    cur.execute(sql, (anonymised, original, token_type))
+                sql = """
+                    INSERT INTO token_vault (anonymised, original, token_type)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (original) DO NOTHING;
+                """
+                cur.execute(sql, (anonymised, original, token_type))
+
         print("Inserted mapping successfully.")
 
     def get_original_by_type_and_anonymised(self, anonymised, token_type):
-        with self.conn.cursor() as cur:
+        with self.conn.cursor(cursor_factory=DictCursor) as cur:
             cur.execute("""
                 SELECT * FROM token_vault
                 WHERE anonymised = %s AND token_type = %s
             """, (anonymised, token_type))
-            return cur.fetchone()["original"]
+            result = cur.fetchone()
+            return result['original'] if result else None
 
     def get_anonymised_by_type_and_original(self, original, token_type):
-        with self.conn.cursor() as cur:
+        with self.conn.cursor(cursor_factory=DictCursor) as cur:
             cur.execute("""
                 SELECT * FROM token_vault
                 WHERE original = %s AND token_type = %s
             """, (original, token_type))
-            return cur.fetchone()["anonymised"]
+            result = cur.fetchone()
+            return result['anonymised'] if result else None
 
     def delete_token_by_type_and_anonymised(self, anonymised, token_type):
         with self.conn.cursor() as cur:
@@ -95,9 +90,9 @@ class PostgresHandler:
                 WHERE anonymised = %s AND token_type = %s
             """, (anonymised, token_type))
             deleted_count = cur.rowcount
-            self.conn.commit()
-            print(f"{deleted_count} deleted")
-            return deleted_count
+
+        print(f"{deleted_count} tokens deleted")
+        return deleted_count
 
     def close_connection(self):
         if self.conn:
