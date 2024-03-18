@@ -26,7 +26,7 @@ func ExecuteAPIServer(databaseConnection *sql.DB, redisClient *redis.Client, jwt
 		// ping health including db and redis
 		authGroup.GET("/health", healthHandler(databaseConnection, redisClient))
 
-		authGroup.POST("/bot/connect", botConnectHandler(redisClient))
+		authGroup.POST("/bot/request-code", botConnectHandler(redisClient))
 
 		// OAuth callback endpoint
 		authGroup.POST("/oauth/google/callback", OAuthCallbackHandler(databaseConnection, jwtKey))
