@@ -60,7 +60,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 ## API Usage for Web Client
 
-**Base URL**: `http://localhost:8081/users/api/v1`
+**Base URL**: `http://user-manager:8081/users/api/v1`
 
 1. **Health**
 
@@ -92,7 +92,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
-1. **Add bot platform** (WIP)
+1. **Add bot platform**
 
    - **Endpoint:** `/platforms`
    - **Method:** `POST`
@@ -101,8 +101,6 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
    ```json
    {
-     "userId": "<id>",
-     "platform": "Telegram",
      "verificationCode": "<verification code>"
    }
    ```
