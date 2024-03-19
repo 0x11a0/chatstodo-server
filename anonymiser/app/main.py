@@ -1,12 +1,16 @@
+from datetime import datetime
+import hashlib
 import json
 import os
 import re
 from os.path import dirname
 from time import sleep
+import uuid
 from dotenv import load_dotenv
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
+from db.postgresql import PostgresHandler
 from db.mongodb import MongoDBHandler
 import re
 
@@ -37,10 +41,23 @@ def enforce_string(message):
         return str(message)
 
 
+def extract_emails(text):
+    pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+    return re.findall(pattern, text)
+
+
+def generate_random_token():
+    random_part = str(uuid.uuid4())
+    time_part = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    raw_token = random_part + time_part
+    return hashlib.sha256(raw_token.encode()).hexdigest()
+
+
 def main():
     print("Starting anonymiser")
 
     dotenv_path = os.path.join(dirname(dirname(dirname(__file__))), '.env')
+    print(dotenv_path)
     if os.path.exists(dotenv_path):
         load_dotenv(dotenv_path)
 
@@ -49,8 +66,10 @@ def main():
     UPSTASH_KAFKA_USERNAME = os.getenv('UPSTASH_KAFKA_USERNAME')
     UPSTASH_KAFKA_PASSWORD = os.getenv('UPSTASH_KAFKA_PASSWORD')
     MONGODB_URL = os.getenv('MONGODB_URL')
+    POSTGRES_URL = os.getenv('CHAT_POSTGRESQL_URL')
 
-    mongo_handler = MongoDBHandler(db_url=MONGODB_URL)
+    chats_db = MongoDBHandler(db_url=MONGODB_URL)
+    token_vault = PostgresHandler(db_url=POSTGRES_URL)
 
     conf = {
         'bootstrap.servers': UPSTASH_KAFKA_SERVER,
@@ -65,11 +84,11 @@ def main():
     consumer = Consumer(**conf)
     consumer.subscribe([topic])
 
-    file_path = 'emails.json'
+    # file_path = 'emails.json'
 
-    email_mapping = load_email_mapping(file_path)
-    email_counter = max([int(email.split('test')[1].split('@')[0])
-                        for email in email_mapping.values()], default=0) + 1
+    # email_mapping = load_email_mapping(file_path)
+    # email_counter = max([int(email.split('test')[1].split('@')[0])
+    #                     for email in email_mapping.values()], default=0) + 1
 
     try:
         while True:
@@ -90,25 +109,35 @@ def main():
 
                 msg = json_msg['message']
 
-                pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
-                matches = re.findall(pattern, msg)
+                matches = extract_emails(msg)
                 for match in matches:
-                    anonymised_email = \
-                        f'test{email_counter}@{match.split("@")[1]}'
-                    email_mapping[match] = anonymised_email
-                    email_counter += 1
-                    msg = msg.replace(match, anonymised_email)
+                    # anonymised_email = \
+                    #     f'test{email_counter}@{match.split("@")[1]}'
+                    prev_anonymised = token_vault.get_anonymised_by_type_and_original(
+                        match, "email")
+                    if not prev_anonymised:
+                        random_token = generate_random_token()
+                        anonymised_email = \
+                            f'test{random_token}@{match.split("@")[1]}'
+
+                        # email_mapping[match] = anonymised_email
+                        # email_counter += 1
+                        msg = msg.replace(match, anonymised_email)
+
+                        # need to optimise this
+                        token_vault.insert_token(
+                            anonymised_email, match, "email")
+                    else:
+                        msg = msg.replace(match, prev_anonymised)
 
                 json_msg['message'] = msg
 
-                mongo_handler.insert_message(json_msg)
-                print(email_mapping)
-                save_email_mapping(email_mapping, file_path)
+                chats_db.insert_message(json_msg)
 
     finally:
         # Clean up on exit
         consumer.close()
-        mongo_handler.close_connection()
+        chats_db.close_connection()
 
 
 if __name__ == "__main__":
