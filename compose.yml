@@ -1,6 +1,7 @@
 version: "3.8"
 services:
   authentication:
+    container_name: authentication
     build:
       context: ./authentication
       dockerfile: Dockerfile
@@ -12,6 +13,7 @@ services:
       - chatstodo
 
   user-manager:
+    container_name: user-manager
     build:
       context: ./user-manager
       dockerfile: Dockerfile
@@ -23,6 +25,7 @@ services:
       - chatstodo
 
   anonymiser:
+    container_name: anonymiser
     build:
       context: ./anonymiser
       dockerfile: Dockerfile
