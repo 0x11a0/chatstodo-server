@@ -1,3 +1,5 @@
+from datetime import datetime
+import hashlib
 import json
 import os
 import re
@@ -45,7 +47,10 @@ def extract_emails(text):
 
 
 def generate_random_token():
-    return str(uuid.uuid4())[:8]
+    random_part = str(uuid.uuid4())
+    time_part = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    raw_token = random_part + time_part
+    return hashlib.sha256(raw_token.encode()).hexdigest()
 
 
 def main():
@@ -79,7 +84,7 @@ def main():
     consumer = Consumer(**conf)
     consumer.subscribe([topic])
 
-    file_path = 'emails.json'
+    # file_path = 'emails.json'
 
     # email_mapping = load_email_mapping(file_path)
     # email_counter = max([int(email.split('test')[1].split('@')[0])
