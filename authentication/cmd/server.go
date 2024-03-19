@@ -5,9 +5,9 @@ import (
 	"context"
 	"crypto/rand"
 	"database/sql"
-	"encoding/hex"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"net/mail"
 	"time"
@@ -74,7 +74,7 @@ func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 		code := generateAuthCode()
 
 		ctx := context.Background()
-		err := storeUserIDAndAuthCodeMapping(ctx, redisClient, requestBody.UserId, requestBody.Platform, code)
+		err := storeAuthtoUserID(ctx, redisClient, requestBody.UserId, requestBody.Platform, code)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error storing user verification code"})
 			log.Printf("%v",err)
@@ -84,18 +84,24 @@ func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 	}
 }
 
-func storeUserIDAndAuthCodeMapping(ctx context.Context, redisClient *redis.Client, userId string, platform string, code string) error {
+func storeAuthtoUserID(ctx context.Context, redisClient *redis.Client, userId string, platform string, code string) error {
 	expiration := 10 * time.Minute
-	return redisClient.Set(ctx, fmt.Sprintf("user_verification:%s:%s", userId, platform), code, expiration).Err()
+	// TODO: if the code exists, dont store it again
+	return redisClient.Set(ctx, code, fmt.Sprintf("user_verification:%s:%s", userId, platform), expiration).Err()
 }
 
 func generateAuthCode() string {
-	b := make([]byte, 6)
-    if _, err := rand.Read(b); err != nil {
-        return ""
-    }
-    return hex.EncodeToString(b)
+	max := big.NewInt(1000000)
+
+	n, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		return ""
+	}
+	otp := fmt.Sprintf("%06d", n)
+
+	return otp
 }
+
 
 func OAuthCallbackHandler(databaseConnection *sql.DB, jwtKey []byte) gin.HandlerFunc {
 	var requestBody struct {

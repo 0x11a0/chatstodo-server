@@ -35,8 +35,6 @@ class RedisClient {
       throw error;
     }
   }
-
-  // Add more methods as needed
 }
 
 const instance = new RedisClient();

@@ -76,18 +76,19 @@ exports.addPlatformLink = async (req, res) => {
       return res.status(401).send({ error: "Unauthorized." });
     }
 
-    const { userId, platform, verificationCode } = req.body;
+    const { verificationCode } = req.body;
 
-    const verificationKey = `user_verification:${userId}:${platform}`;
-    const storedVerificationCode = await redisClient.get(verificationKey);
+    const storedDetails = await redisClient.get(verificationCode);
 
-    if (!storedVerificationCode) {
+    if (!storedDetails) {
       return res
         .status(404)
         .send({ error: "Verification details not found for user." });
     }
 
-    if (storedVerificationCode !== verificationCode) {
+    const [keyType, userId, platform] = storedDetails.split(":");
+
+    if (keyType !== "user_verification" || userId == null || platform == null) {
       return res.status(400).send({ error: "Incorrect verification code." });
     }
 
@@ -101,7 +102,7 @@ exports.addPlatformLink = async (req, res) => {
 
     // await platformLink.save();
 
-    await redisClient.del(verificationKey);
+    await redisClient.del(verificationCode);
 
     res.status(201).send({ message: "Platform link added successfully." });
   } catch (error) {

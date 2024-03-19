@@ -6,6 +6,8 @@ Authentication Service is used to exchange a user's email for its UUID within Ch
 
 ## Endpoints
 
+Base URL : `http://authentication:8080`
+
 ### GET /auth/api/v1/health
 
 Checks the health of the authentication service.
