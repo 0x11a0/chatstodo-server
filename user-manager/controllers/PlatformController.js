@@ -11,12 +11,14 @@ const PlatformController = {
     const { platformName, credentialId, credentialSecret } = req.body;
 
     try {
+      const userId = req.userId; // Retrieve the userId from req
+
       const transaction = await sequelize.transaction();
 
       try {
         const newCredential = await Credential.create({ credentialId, credentialSecret }, { transaction });
 
-        const newPlatform = await Platform.create({ platformName, credentialId: newCredential.id, UserId: req.userId}, { transaction });
+        const newPlatform = await Platform.create({ platformName, credentialId: newCredential.id, UserId: userId}, { transaction });
 
         await transaction.commit();
 

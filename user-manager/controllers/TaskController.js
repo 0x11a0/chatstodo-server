@@ -3,32 +3,25 @@ const Task = require('../models/Task');
 
 const TaskController = {
   getAllTasks: async (req, res) => {
-    try {
-      const tasks = await Task.findAll();
-      res.json(tasks);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      res.status(500).json({ error: 'Error fetching tasks' });
-    }
-  },
+    const userId = req.userId; // Retrieve the userId from req
 
-  getLatestTasks: async (req, res) => {
     try {
-      const latestTasks = await Task.findAll({
-        order: [['createdAt', 'DESC']],
-        limit: 5 // Assuming you want to get the latest 5 tasks
-      });
-      res.json(latestTasks);
+        const tasks = await Task.findAll({
+            where: { UserId: userId }, // Filter by userId
+        });
+        
+        res.json(tasks);
     } catch (error) {
-      console.error('Error fetching latest tasks:', error);
-      res.status(500).json({ error: 'Error fetching latest tasks' });
+        console.error('Error fetching tasks:', error);
+        res.status(500).json({ error: 'Error fetching tasks' });
     }
   },
 
   addTask: async (req, res) => {
     try {
+      const userId = req.userId; // Retrieve the userId from req
       const { value, deadline, tags } = req.body;
-      const newTask = await Task.create({ value, deadline, tags });
+      const newTask = await Task.create({ value, deadline, tags, UserId: userId });
       res.status(201).json(newTask);
     } catch (error) {
       console.error('Error adding task:', error);
@@ -38,16 +31,23 @@ const TaskController = {
 
   removeTask: async (req, res) => {
     try {
-      const { taskId } = req.params;
-      const task = await Task.findByPk(taskId);
-      if (!task) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-      await task.destroy();
-      res.status(204).end();
+        const { taskId } = req.params;
+        const userId = req.userId; // Retrieve the userId from req
+
+        // Find the task by its id and user id
+        const task = await Task.findOne({ where: { id: taskId, UserId: userId } });
+
+        if (!task) {
+            return res.status(404).json({ error: 'Task not found' });
+        }
+
+        // Remove the task if it belongs to the user
+        await task.destroy();
+
+        res.status(204).end();
     } catch (error) {
-      console.error('Error removing task:', error);
-      res.status(500).json({ error: 'Error removing task' });
+        console.error('Error removing task:', error);
+        res.status(500).json({ error: 'Error removing task' });
     }
   }
 };

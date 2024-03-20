@@ -5,7 +5,6 @@ const { isAuthenticated } = require('../middleware/auth');
 
 // Define routes
 router.get('/tasks', isAuthenticated, TaskController.getAllTasks);
-router.get('/tasks/latest', isAuthenticated, TaskController.getLatestTasks);
 router.post('/tasks', isAuthenticated, TaskController.addTask);
 router.delete('/tasks/:taskId', isAuthenticated, TaskController.removeTask);
 
