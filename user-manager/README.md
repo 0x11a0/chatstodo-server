@@ -56,9 +56,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 #### ML Serverless functions
 
-## gRPC Service for Bots
-
-## API Usage for Web Client
+## API Usage General
 
 **Base URL**: `http://user-manager:8081/users/api/v1`
 
@@ -76,21 +74,48 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
+### For Bots
+
 1. **Get summary** (WIP)
 
    - **Endpoint:** `/summary`
    - **Method:** `POST`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Payload:** Insert JWT with user id in it
+   - **Body:**
+
+     ```json
+     {
+       "platform": "Telegram"
+     }
+     ```
+
+   - **Expected Output:**
+
+     ```json
+     {
+        "tasks": [...],
+        "events": [...],
+        "summaries": [...]
+     }
+     ```
+
+### For Web Client
+
+1. **Get summary** (WIP)
+
+   - **Endpoint:** `/summary`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
    - **Body:** _None required_
    - **Expected Output:**
 
-   ```json
-   {
-       "tasks": [...],
-       "events": [...],
-       "summaries": [...]
-   }
-   ```
+     ```json
+     {
+        "tasks": [...],
+        "events": [...],
+        "summaries": [...]
+     }
+     ```
 
 1. **Add bot platform**
 
@@ -99,19 +124,19 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Payload:** Insert JWT with user id in it
    - **Body:**
 
-   ```json
-   {
-     "verificationCode": "<verification code>"
-   }
-   ```
+     ```json
+     {
+       "verificationCode": "<verification code>"
+     }
+     ```
 
    - **Expected Output:**
 
-   ```json
-   {
-     "message": "Platform link added successfully."
-   }
-   ```
+     ```json
+     {
+       "message": "Platform link added successfully."
+     }
+     ```
 
    - **Remarks**
      Left the implementation of inserting the mapping into database
@@ -123,19 +148,19 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Payload:** Insert JWT with user id in it
    - **Body:**
 
-   ```json
-   {
-     "platform": "Telegram"
-   }
-   ```
+     ```json
+     {
+       "platform": "Telegram"
+     }
+     ```
 
    - **Expected Output:**
 
-   ```json
-   {
-     "message": "Platform link removed successfully."
-   }
-   ```
+     ```json
+     {
+       "message": "Platform link removed successfully."
+     }
+     ```
 
 1. **Get all connected bot platforms** (WIP)
 
@@ -145,17 +170,17 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Body:** _None required_
    - **Expected Output:**
 
-   ```json
-   [
-       {
+     ```json
+     [
+        {
            "platform": "Telegram",
            "credentials": {
-               "token": "abc123",
+                 "token": "abc123",
            }
-       },
-       ...
-   ]
-   ```
+        },
+        ...
+     ]
+     ```
 
 1. **Logout** (WIP)
    Endpoint: `/users/logoutAll`

@@ -45,7 +45,13 @@ const path = require("path");
 
 exports.getSummary = async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const jwtUserId = decoded.userId;
+
+    if (jwtUserId == null) {
+      return res.status(401).send({ error: "Unauthorized." });
+    }
 
     // client.processLatestMessages({ userId }, (error, response) => {
     //   if (error) {
