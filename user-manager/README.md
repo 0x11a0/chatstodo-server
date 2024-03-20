@@ -116,7 +116,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Remarks**
      Left the implementation of inserting the mapping into database
 
-1. **Remove bot platform**
+1. **Remove bot platform** (WIP)
 
    - **Endpoint:** `/platforms`
    - **Method:** `DELETE`
@@ -137,7 +137,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
-1. **Get all connected bot platforms**
+1. **Get all connected bot platforms** (WIP)
 
    - **Endpoint:** `/platforms`
    - **Method:** `GET`
@@ -157,7 +157,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
    ]
    ```
 
-1. **Logout**
+1. **Logout** (WIP)
    Endpoint: `/users/logoutAll`
 
    Method: `POST`
