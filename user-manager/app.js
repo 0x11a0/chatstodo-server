@@ -12,13 +12,19 @@
 // Import required modules
 const express = require("express");
 const cors = require("cors");
+const db = require('./services/db');
 const dotenv = require("dotenv");
 dotenv.config();
 const bodyParser = require("body-parser");
-const userRoutes = require("./userRoutes"); // Assuming your routes file is named expressRoute.js
+const credentialRoutes = require("./routes/CredentialRoutes");
+const platformRoutes = require("./routes/PlatformRoutes");
+const taskRoutes = require("./routes/TaskRoutes");
+const eventRoutes = require("./routes/EventRoutes");
+const summaryRoutes = require("./routes/SummaryRoutes");
 
 // Create an instance of Express
 const app = express();
+db.testConnection();
 
 // Middleware setup
 
@@ -29,7 +35,11 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Use our routes with the Express application
-app.use(userRoutes);
+app.use(credentialRoutes);
+app.use(platformRoutes);
+app.use(taskRoutes);
+app.use(eventRoutes);
+app.use(summaryRoutes);
 
 // Error handling middleware
 
