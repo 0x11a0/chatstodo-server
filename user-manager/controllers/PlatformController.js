@@ -1,6 +1,6 @@
 // PlatformController.js
 const Platform = require("../models/Platform");
-const { sequelize } = require("../services/db");
+const { sequelize } = require("../services/postgresql");
 
 const redisClient = require("../redisClient");
 const jwt = require("jsonwebtoken");
@@ -91,7 +91,6 @@ const PlatformController = {
         return res.status(401).send({ error: "Unauthorized." });
       }
 
-      // perform the otp exchange here
       const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
       const jwtUserId = decoded.userId;

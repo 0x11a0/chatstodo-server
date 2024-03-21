@@ -1,4 +1,3 @@
-// Import the 'jsonwebtoken' library for handling JSON Web Tokens
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 require("dotenv").config();
@@ -13,7 +12,6 @@ exports.isAuthenticated = async (req, res, next) => {
   const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    // Return a 401 (Unauthorized) status with a relevant message
     return res.status(401).json({ message: "unauthorized" });
   }
 

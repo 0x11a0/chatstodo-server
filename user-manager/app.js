@@ -12,7 +12,8 @@
 // Import required modules
 const express = require("express");
 const cors = require("cors");
-const db = require("./services/db");
+const userManagementDB = require("./services/postgresql");
+const userGroupPlatformDB = require("./services/mongodb");
 const dotenv = require("dotenv");
 dotenv.config();
 const bodyParser = require("body-parser");
@@ -20,10 +21,12 @@ const platformRoutes = require("./routes/PlatformRoutes");
 const taskRoutes = require("./routes/TaskRoutes");
 const eventRoutes = require("./routes/EventRoutes");
 const summaryRoutes = require("./routes/SummaryRoutes");
+const groupRoutes = require("./routes/GroupRoutes");
 
 // Create an instance of Express
 const app = express();
-db.testConnection();
+userManagementDB.testConnection();
+userGroupPlatformDB.testConnection();
 
 // Middleware setup
 
@@ -34,8 +37,15 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // TODO: Check DB health too
-app.use("/health", function (req, res) {
-  res.status(200).send({ message: "Service is healthy" });
+app.use("/users/api/v1/health", function (req, res) {
+  // check the userManagementDB and userGroupPlatformDB health
+  try {
+    userManagementDB.testConnection();
+    userGroupPlatformDB.testConnection();
+    res.status(200).send({ message: "Service is healthy" });
+  } catch (error) {
+    res.status(500).send({ message: "Service is not healthy" });
+  }
 });
 
 // Use our routes with the Express application
@@ -44,6 +54,7 @@ app.use("/users/api/v1", platformRoutes);
 app.use("/users/api/v1", taskRoutes);
 app.use("/users/api/v1", eventRoutes);
 app.use("/users/api/v1", summaryRoutes);
+app.use("/users/api/v1", groupRoutes);
 
 // Error handling middleware
 
