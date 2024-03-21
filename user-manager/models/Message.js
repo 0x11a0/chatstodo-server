@@ -30,6 +30,19 @@ const messageSchema = new mongoose.Schema(
   }
 );
 
+messageSchema.statics.findByGroupIdAndPlatformAndTimestamp = async function (
+  group_id,
+  platform,
+  start_timestamp
+) {
+  // find mathcing group id and platform, then find from start_timestamp
+  return this.find({
+    group_id,
+    platform,
+    timestamp: { $gte: start_timestamp },
+  });
+};
+
 const Message = mongoose.model("Message", messageSchema);
 
 module.exports = Message;
