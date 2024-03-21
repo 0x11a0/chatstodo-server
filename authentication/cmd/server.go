@@ -85,7 +85,7 @@ func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 }
 
 func storeAuthtoUserID(ctx context.Context, redisClient *redis.Client, userId string, platform string, code string) error {
-	expiration := 10 * time.Minute
+	expiration := 7 * time.Minute
 	// TODO: if the code exists, dont store it again
 	return redisClient.Set(ctx, code, fmt.Sprintf("user_verification:%s:%s", userId, platform), expiration).Err()
 }

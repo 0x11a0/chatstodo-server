@@ -12,7 +12,7 @@
 // Import required modules
 const express = require("express");
 const cors = require("cors");
-const db = require('./services/db');
+const db = require("./services/db");
 const dotenv = require("dotenv");
 dotenv.config();
 const bodyParser = require("body-parser");
@@ -34,12 +34,17 @@ app.use(cors());
 // Use bodyParser to parse JSON payloads
 app.use(bodyParser.json());
 
+// TODO: Check DB health too
+app.use("/health", function (req, res) {
+  res.status(200).send({ message: "Service is healthy" });
+});
+
 // Use our routes with the Express application
-app.use(credentialRoutes);
-app.use(platformRoutes);
-app.use(taskRoutes);
-app.use(eventRoutes);
-app.use(summaryRoutes);
+app.use("/users/api/v1", credentialRoutes);
+app.use("/users/api/v1", platformRoutes);
+app.use("/users/api/v1", taskRoutes);
+app.use("/users/api/v1", eventRoutes);
+app.use("/users/api/v1", summaryRoutes);
 
 // Error handling middleware
 

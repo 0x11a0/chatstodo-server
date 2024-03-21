@@ -3,7 +3,7 @@ const Platform = require("../models/Platform");
 const Credential = require("../models/Credential");
 const { sequelize } = require("../services/db");
 
-const redisClient = require("./redisClient");
+const redisClient = require("../redisClient");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
@@ -49,12 +49,16 @@ const PlatformController = {
 
       try {
         const newCredential = await Credential.create(
-          { credentialId: userId, credentialSecret: "" },
+          { credentialId: userId, credentialSecret: "x" },
           { transaction }
         );
 
         const newPlatform = await Platform.create(
-          { platform, credentialId: newCredential.id, UserId: jwtUserId },
+          {
+            platformName: platform,
+            credentialId: newCredential.id,
+            UserId: jwtUserId,
+          },
           { transaction }
         );
 

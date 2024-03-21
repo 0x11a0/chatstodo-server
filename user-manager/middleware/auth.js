@@ -1,8 +1,7 @@
 // Import the 'jsonwebtoken' library for handling JSON Web Tokens
 const jwt = require("jsonwebtoken");
-const User = require('../models/User');
-
-console.log(process.env.JWT_SECRET);
+const User = require("../models/User");
+require("dotenv").config();
 
 exports.isAuthenticated = async (req, res, next) => {
   if (!req.headers.authorization) {
@@ -19,9 +18,8 @@ exports.isAuthenticated = async (req, res, next) => {
   }
 
   try {
+    const decodedData = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    const decodedData = jwt.verify(token, process.env.JWT_SECRET);
-  
     let user = await User.findOne({ where: { _id: decodedData.userId } });
 
     if (!user) {
@@ -34,7 +32,7 @@ exports.isAuthenticated = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('Error verifying token:', error);
-    return res.status(401).json({ message: 'Unauthorized' });
+    console.error("Error verifying token:", error);
+    return res.status(401).json({ message: "Unauthorized" });
   }
 };
