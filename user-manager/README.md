@@ -99,6 +99,29 @@ User Manager Service is in charge of linking the platforms where the bots reside
      }
      ```
 
+#### Groups
+
+1. **View all groups** (WIP)
+
+   - **Endpoint:** `/groups`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     [
+       {
+         "platform": "Telegram",
+         "groups": [
+            
+         ]
+       },
+       ...
+     ]
+     ```
+
+
 ### For Web Client
 
 1. **Get summary** (WIP)
@@ -181,6 +204,50 @@ User Manager Service is in charge of linking the platforms where the bots reside
         ...
      ]
      ```
+
+#### Group
+
+1. **View all groups** (WIP)
+
+   - **Endpoint:** `/groups`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     [
+       {
+         "platform": "Telegram",
+         "groups": [
+
+         ]
+       },
+       ...
+     ]
+     ```
+
+1. **Add** (WIP)
+
+   - **Endpoint:** `/groups`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     [
+        {
+           "platform": "Telegram",
+           "credentials": {
+                 "token": "abc123",
+           }
+        },
+        ...
+     ]
+     ```
+
+#### User management
 
 1. **Logout** (WIP)
    Endpoint: `/users/logoutAll`
