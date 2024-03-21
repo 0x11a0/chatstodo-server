@@ -56,9 +56,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 #### ML Serverless functions
 
-## gRPC Service for Bots
-
-## API Usage for Web Client
+## API Usage General
 
 **Base URL**: `http://user-manager:8081/users/api/v1`
 
@@ -76,68 +74,178 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
+### For Bots
+
 1. **Get summary** (WIP)
 
    - **Endpoint:** `/summary`
    - **Method:** `POST`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
+   - **Payload:** Insert JWT with user id in it
+   - **Body:**
+
+     ```json
+     {
+       "platform": "Telegram"
+     }
+     ```
+
+   - **Expected Output:**
+
+     ```json
+     {
+        "tasks": [...],
+        "events": [...],
+        "summaries": [...]
+     }
+     ```
+
+#### Groups
+
+1. **View all groups** (WIP)
+
+   - **Endpoint:** `/groups`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
    - **Body:** _None required_
    - **Expected Output:**
 
-   ```json
-   {
-       "tasks": [...],
-       "events": [...],
-       "summaries": [...]
-   }
-   ```
+     ```json
+     [
+       {
+         "platform": "Telegram",
+         "groups": [
 
-1. **Add bot platform**
+         ]
+       },
+       ...
+     ]
+     ```
+
+### For Web Client
+
+1. **Get summary** (WIP)
+
+   - **Endpoint:** `/summary`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     {
+        "tasks": [...],
+        "events": [...],
+        "summaries": [...]
+     }
+     ```
+
+1. **Add platform**
 
    - **Endpoint:** `/platforms`
    - **Method:** `POST`
    - **Payload:** Insert JWT with user id in it
    - **Body:**
 
-   ```json
-   {
-     "verificationCode": "<verification code>"
-   }
-   ```
+     ```json
+     {
+       "verificationCode": "<verification code>"
+     }
+     ```
 
    - **Expected Output:**
 
-   ```json
-   {
-     "message": "Platform link added successfully."
-   }
-   ```
+     Status code: 201
 
-   - **Remarks**
-     Left the implementation of inserting the mapping into database
+     ```json
+     {
+       "message": "Platform link added successfully."
+     }
+     ```
 
-1. **Remove bot platform**
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `404 Not Found` if the vertification code does not exist. The service will return:
+
+       ```json
+       {
+         "error": "Invalid verification code or may have expired. Please request again."
+       }
+       ```
+
+     - `409 Conflict` if the user has already added the same user on the same platform. The service will return:
+
+       ```json
+       {
+         "error": "Invalid verification code or may have expired. Please request again."
+       }
+       ```
+
+     - `500 Internal Server Error` if
+
+       1. the server cannot find the user id and platform in the redis.
+
+       1. database transactions error
+
+       The service will return:
+
+       ```json
+       {
+         "error": "Verification details not found for user."
+       }
+       ```
+
+1. **Remove platform**
 
    - **Endpoint:** `/platforms`
    - **Method:** `DELETE`
    - **Payload:** Insert JWT with user id in it
    - **Body:**
 
-   ```json
-   {
-     "platform": "Telegram"
-   }
-   ```
+     ```json
+     {
+       "platformId": 1
+     }
+     ```
 
    - **Expected Output:**
 
-   ```json
-   {
-     "message": "Platform link removed successfully."
-   }
-   ```
+     Status code: 204
 
-1. **Get all connected bot platforms**
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `403 Forbidden` if the user's platform id dont match. The service will return:
+
+       ```json
+       {
+         "error": "You do not own this platform"
+       }
+       ```
+
+     - `404 ` if the user's platform id dont match. The service will return:
+
+       ```json
+       {
+         "error": "You do not own this platform"
+       }
+       ```
+
+1. **Get all connected platforms**
 
    - **Endpoint:** `/platforms`
    - **Method:** `GET`
@@ -145,19 +253,80 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Body:** _None required_
    - **Expected Output:**
 
-   ```json
-   [
+     - `200 Success`
+       ```json
+       [
+           {
+             "platformName": "Telegram",
+             "credentialId": "13254532"
+           },
+           ...
+       ]
+       ```
+
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
        {
-           "platform": "Telegram",
-           "credentials": {
-               "token": "abc123",
-           }
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+       ```json
+       {
+         "error": "Error fetching platforms."
+       }
+       ```
+
+#### Group
+
+1. **View all groups** (WIP)
+
+   - **Endpoint:** `/groups`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     [
+       {
+         "platform": "Telegram",
+         "groups": [
+
+         ]
        },
        ...
-   ]
-   ```
+     ]
+     ```
 
-1. **Logout**
+1. **Add** (WIP)
+
+   - **Endpoint:** `/groups`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     [
+        {
+           "platform": "Telegram",
+           "credentials": {
+                 "token": "abc123",
+           }
+        },
+        ...
+     ]
+     ```
+
+#### User management
+
+1. **Logout** (WIP)
    Endpoint: `/users/logoutAll`
 
    Method: `POST`

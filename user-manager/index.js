@@ -11,10 +11,22 @@
 // Import required modules
 
 const app = require("./app");
-require("dotenv").config();
+const { syncDatabase } = require('./helper/dbSetup');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Start the Express server
 const PORT = process.env.USER_MANAGER_PORT || 8081;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}.`);
-});
+// Call the syncDatabase function to synchronize the database schema
+syncDatabase()
+  .then(() => {
+    // Start your Express app once the database schema is synchronized
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to synchronize database schema:', error);
+  });
