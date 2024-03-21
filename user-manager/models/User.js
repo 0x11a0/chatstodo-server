@@ -1,13 +1,13 @@
 // User.js
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../services/postgresql");
 
-const User = sequelize.define('User', {
+const User = sequelize.define("User", {
   _id: {
     type: DataTypes.STRING,
     primaryKey: true,
-    allowNull: false
-  }
+    allowNull: false,
+  },
 });
 
 module.exports = User;

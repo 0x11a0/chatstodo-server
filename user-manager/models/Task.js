@@ -1,6 +1,6 @@
 // Task.js
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db');
+const { sequelize } = require('../services/postgresql');
 const User = require('./User');
 
 const Task = sequelize.define('Task', {
