@@ -26,11 +26,8 @@ const testUser = {
 
 // Sample platform link data for testing.
 const platformLink = {
-  platform: "Telegram",
-  credentials: {
-    token: "abc123",
-    otherKey: "value",
-  },
+  platformName: "Telegram",
+  credentialId: "afsd",
 };
 
 // Variable to store the user ID after successful registration.

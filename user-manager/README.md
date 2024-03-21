@@ -139,7 +139,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
      }
      ```
 
-1. **Add bot platform**
+1. **Add platform**
 
    - **Endpoint:** `/platforms`
    - **Method:** `POST`
@@ -202,7 +202,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
        }
        ```
 
-1. **Remove bot platform** (WIP)
+1. **Remove platform**
 
    - **Endpoint:** `/platforms`
    - **Method:** `DELETE`
@@ -211,7 +211,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
      ```json
      {
-       "platform": "Telegram"
+       "platformId": 1
      }
      ```
 
@@ -245,7 +245,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
        }
        ```
 
-1. **Get all connected bot platforms** (WIP)
+1. **Get all connected platforms**
 
    - **Endpoint:** `/platforms`
    - **Method:** `GET`
@@ -257,10 +257,8 @@ User Manager Service is in charge of linking the platforms where the bots reside
        ```json
        [
            {
-             "platform": "Telegram",
-             "credentials": {
-                   "token": "abc123",
-             }
+             "platformName": "Telegram",
+             "credentialId": "13254532"
            },
            ...
        ]

@@ -1,13 +1,17 @@
 // Platform.js
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db');
-const User = require('./User');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../services/db");
+const User = require("./User");
 
-const Platform = sequelize.define('Platform', {
+const Platform = sequelize.define("Platform", {
   platformName: {
     type: DataTypes.STRING,
-    allowNull: false
-  }
+    allowNull: false,
+  },
+  credentialId: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
 });
 
 Platform.belongsTo(User);

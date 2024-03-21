@@ -1,6 +1,5 @@
 // PlatformController.js
 const Platform = require("../models/Platform");
-const Credential = require("../models/Credential");
 const { sequelize } = require("../services/db");
 
 const redisClient = require("../redisClient");
@@ -47,28 +46,24 @@ const PlatformController = {
 
       const transaction = await sequelize.transaction();
 
-      // TODO: Check if the platform and crendetials are the same is already linked to the same user
-      // const existingPlatform = await Platform.findOne({
-      //   where: {
-      //     platformName: platform,
-      //     UserId: jwtUserId,
-      //   },
-      // });
-      // if (existingPlatform) {
-      //   await transaction.rollback();
-      //   return res.status(409).json({ error: "Platform already linked to the user." });
-      // }
+      // Check if the platform is already linked to the user
+      const existingPlatform = await Platform.findOne({
+        where: {
+          platformName: platform,
+          UserId: jwtUserId,
+        },
+      });
+      
+      if (existingPlatform) {
+        await transaction.rollback();
+        return res.status(409).json({ error: "Platform already linked to the user." });
+      }
 
       try {
-        const newCredential = await Credential.create(
-          { credentialId: userId, credentialSecret: "x" },
-          { transaction }
-        );
-
         const newPlatform = await Platform.create(
           {
             platformName: platform,
-            Credential: newCredential,
+            credentialId: userId,
             UserId: jwtUserId,
           },
           { transaction }
@@ -91,8 +86,6 @@ const PlatformController = {
   },
 
   removePlatform: async (req, res) => {
-    const { platformId } = req.params;
-
     try {
       if (req.headers.authorization == null) {
         return res.status(401).send({ error: "Unauthorized." });
@@ -107,6 +100,8 @@ const PlatformController = {
         return res.status(401).send({ error: "Unauthorized." });
       }
 
+      const { platformId } = req.body;
+
       const transaction = await sequelize.transaction();
 
       try {
@@ -115,18 +110,13 @@ const PlatformController = {
           await transaction.rollback();
           return res.status(404).json({ error: "Platform not found" });
         }
-
-        if (platform.userId !== jwtUserId) {
+        console.log(platform.UserId, jwtUserId);
+        if (platform.UserId !== jwtUserId) {
           await transaction.rollback();
           return res
             .status(403)
             .json({ error: "You do not own this platform" });
         }
-
-        await Credential.destroy(
-          { where: { id: platform.credentialId } },
-          { transaction }
-        );
 
         await platform.destroy({ transaction });
 
@@ -161,10 +151,6 @@ const PlatformController = {
 
       const platforms = await Platform.findAll({
         where: { UserId: jwtUserId }, // Filter by userId
-        include: {
-          model: Credential,
-          as: "Credential", // Alias for the associated credential
-        },
       });
 
       res.status(200).json({ platforms: platforms });
