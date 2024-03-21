@@ -1,36 +1,71 @@
 // PlatformController.js
-const Platform = require('../models/Platform');
-const Credential = require('../models/Credential');
-const { sequelize } = require('../services/db');
+const Platform = require("../models/Platform");
+const Credential = require("../models/Credential");
+const { sequelize } = require("../services/db");
 
-
+const redisClient = require("./redisClient");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 // Controller methods
 const PlatformController = {
   addPlatform: async (req, res) => {
-    const { platformName, credentialId, credentialSecret } = req.body;
-
     try {
-      const userId = req.userId; // Retrieve the userId from req
+      // perform the otp exchange here
+      const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const jwtUserId = decoded.userId;
+
+      if (jwtUserId == null) {
+        return res.status(401).send({ error: "Unauthorized." });
+      }
+
+      const { verificationCode } = req.body;
+
+      const storedDetails = await redisClient.get(verificationCode);
+
+      if (!storedDetails) {
+        return res
+          .status(404)
+          .send({ error: "Verification details not found for user." });
+      }
+
+      const [keyType, userId, platform] = storedDetails.split(":");
+
+      if (
+        keyType !== "user_verification" ||
+        userId == null ||
+        platform == null
+      ) {
+        return res.status(400).send({ error: "Incorrect verification code." });
+      }
 
       const transaction = await sequelize.transaction();
 
       try {
-        const newCredential = await Credential.create({ credentialId, credentialSecret }, { transaction });
+        const newCredential = await Credential.create(
+          { credentialId: userId, credentialSecret: "" },
+          { transaction }
+        );
 
-        const newPlatform = await Platform.create({ platformName, credentialId: newCredential.id, UserId: userId}, { transaction });
+        const newPlatform = await Platform.create(
+          { platform, credentialId: newCredential.id, UserId: userId },
+          { transaction }
+        );
 
         await transaction.commit();
+
+        await redisClient.del(verificationCode);
 
         res.status(201).json(newPlatform);
       } catch (error) {
         await transaction.rollback();
-        console.error('Error adding platform:', error);
-        res.status(500).json({ error: 'Error adding platform' });
+        console.error("Error adding platform:", error);
+        res.status(500).json({ error: "Error adding platform" });
       }
     } catch (error) {
-      console.error('Error starting transaction:', error);
-      res.status(500).json({ error: 'Error starting transaction' });
+      console.error("Error starting transaction:", error);
+      res.status(500).json({ error: "Error starting transaction" });
     }
   },
 
@@ -39,56 +74,61 @@ const PlatformController = {
     const userId = req.userId; // Retrieve the userId from req
 
     try {
-        const transaction = await sequelize.transaction();
+      const transaction = await sequelize.transaction();
 
-        try {
-            const platform = await Platform.findByPk(platformId, { transaction });
-            if (!platform) {
-                await transaction.rollback();
-                return res.status(404).json({ error: 'Platform not found' });
-            }
-
-            if (platform.userId !== userId) {
-                await transaction.rollback();
-                return res.status(403).json({ error: 'Unauthorized: You do not own this platform' });
-            }
-
-            await Credential.destroy({ where: { id: platform.credentialId } }, { transaction });
-
-            await platform.destroy({ transaction });
-
-            await transaction.commit();
-
-            res.status(204).end();
-        } catch (error) {
-            await transaction.rollback();
-            console.error('Error removing platform:', error);
-            res.status(500).json({ error: 'Error removing platform' });
+      try {
+        const platform = await Platform.findByPk(platformId, { transaction });
+        if (!platform) {
+          await transaction.rollback();
+          return res.status(404).json({ error: "Platform not found" });
         }
+
+        if (platform.userId !== userId) {
+          await transaction.rollback();
+          return res
+            .status(403)
+            .json({ error: "Unauthorized: You do not own this platform" });
+        }
+
+        await Credential.destroy(
+          { where: { id: platform.credentialId } },
+          { transaction }
+        );
+
+        await platform.destroy({ transaction });
+
+        await transaction.commit();
+
+        res.status(204).end();
+      } catch (error) {
+        await transaction.rollback();
+        console.error("Error removing platform:", error);
+        res.status(500).json({ error: "Error removing platform" });
+      }
     } catch (error) {
-        console.error('Error starting transaction:', error);
-        res.status(500).json({ error: 'Error starting transaction' });
+      console.error("Error starting transaction:", error);
+      res.status(500).json({ error: "Error starting transaction" });
     }
   },
 
   getPlatforms: async (req, res) => {
-      const userId = req.userId; // Retrieve the userId from req
+    const userId = req.userId; // Retrieve the userId from req
 
-      try {
-          const platforms = await Platform.findAll({
-              where: { UserId: userId }, // Filter by userId
-              include: {
-                  model: Credential,
-                  as: 'Credential' // Alias for the associated credential
-              }
-          });
+    try {
+      const platforms = await Platform.findAll({
+        where: { UserId: userId }, // Filter by userId
+        include: {
+          model: Credential,
+          as: "Credential", // Alias for the associated credential
+        },
+      });
 
-          res.json(platforms);
-      } catch (error) {
-          console.error('Error fetching platforms:', error);
-          res.status(500).json({ error: 'Error fetching platforms' });
-      }
-  }
+      res.json(platforms);
+    } catch (error) {
+      console.error("Error fetching platforms:", error);
+      res.status(500).json({ error: "Error fetching platforms" });
+    }
+  },
 };
 
 module.exports = PlatformController;
