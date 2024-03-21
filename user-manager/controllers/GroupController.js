@@ -42,7 +42,7 @@ const GroupController = {
 
       res.status(200).json({ platforms: groupsOfUserByPlatform });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: "Error fetching groups." });
     }
   },
 
@@ -87,7 +87,7 @@ const GroupController = {
 
       res.status(204).end();
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: "Error deleting group" });
     }
   },
 };

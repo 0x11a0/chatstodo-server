@@ -284,45 +284,111 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 #### Group
 
-1. **View all groups** (WIP)
+1.  **View all groups**
 
-   - **Endpoint:** `/groups`
-   - **Method:** `GET`
-   - **Payload:** Insert JWT with user id in it
-   - **Body:** _None required_
-   - **Expected Output:**
+    - **Endpoint:** `/groups`
+    - **Method:** `GET`
+    - **Payload:** Insert JWT with user id in it
+    - **Body:** _None required_
+    - **Expected Output:**
 
-     ```json
-     [
-       {
-         "platform": "Telegram",
-         "groups": [
+      Status code: 200
 
-         ]
-       },
-       ...
-     ]
-     ```
+      ```json
+      {
+        "platforms": [
+          {
+            "platform": "Telegram",
+            "groups": [
+              {
+                "_id": "", // object id
+                "user_id": "",
+                "group_id": "",
+                "group_name": "Group 1",
+                "platform": "Telegram",
+                "created_at": "2024-03-21T09:35:08.778659+00:00"
+              }
+            ]
+          }
+        ]
+      }
+      ```
 
-1. **Add** (WIP)
+    - **Error Responses:**
 
-   - **Endpoint:** `/groups`
-   - **Method:** `POST`
-   - **Payload:** Insert JWT with user id in it
-   - **Body:** _None required_
-   - **Expected Output:**
+      - `401 Unauthorized` if the JWT is invalid or null. The service will return:
 
-     ```json
-     [
+        ```json
         {
-           "platform": "Telegram",
-           "credentials": {
-                 "token": "abc123",
-           }
-        },
-        ...
-     ]
-     ```
+          "error": "Unauthorized."
+        }
+        ```
+
+      - `404 Not Found` if the users have no platform connected. The service will return:
+
+        ```json
+        {
+          "error": "You do not own any platform."
+        }
+        ```
+
+      - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+        ```json
+        {
+          "error": "Error fetching platforms."
+        }
+        ```
+
+1.  **Delete a group**
+
+    - **Endpoint:** `/groups`
+    - **Method:** `DELETE`
+    - **Payload:** Insert JWT with user id in it
+    - **Body:**
+
+      ```json
+      {
+        "groupId": "",
+        "platform": "Telegram"
+      }
+      ```
+
+    - **Expected Output:**
+
+      Status code: 204
+
+    - **Error Responses:**
+
+      - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+        ```json
+        {
+          "error": "Unauthorized."
+        }
+        ```
+
+      - `404 Not Found` if the users have no platform connected or no such group id under the user. The service will return:
+
+        ```json
+        {
+          "error": "You do not own any platform."
+        }
+        ```
+
+        ```json
+        {
+          "error": "Group not found."
+        }
+        ```
+
+      - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+        ```json
+        {
+          "error": "Error deleting group."
+        }
+        ```
 
 #### User management
 
