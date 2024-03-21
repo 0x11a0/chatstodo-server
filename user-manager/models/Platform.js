@@ -8,10 +8,10 @@ const Platform = sequelize.define("Platform", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  credentialId: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
+  lastProcessed: {
+    type: DataTypes.DATE,
+    allowNull: false
+  }
 });
 
 Platform.belongsTo(User);
