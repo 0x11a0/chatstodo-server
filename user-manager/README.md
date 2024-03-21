@@ -209,11 +209,33 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
    - **Expected Output:**
 
-     ```json
-     {
-       "message": "Platform link removed successfully."
-     }
-     ```
+     Status code: 204
+
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `403 Forbidden` if the user's platform id dont match. The service will return:
+
+       ```json
+       {
+         "error": "You do not own this platform"
+       }
+       ```
+
+     - `404 ` if the user's platform id dont match. The service will return:
+
+       ```json
+       {
+         "error": "You do not own this platform"
+       }
+       ```
 
 1. **Get all connected bot platforms** (WIP)
 

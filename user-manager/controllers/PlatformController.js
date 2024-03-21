@@ -54,7 +54,7 @@ const PlatformController = {
         );
 
         const newPlatform = await Platform.create(
-          { platform, credentialId: newCredential.id, UserId: userId },
+          { platform, credentialId: newCredential.id, UserId: jwtUserId },
           { transaction }
         );
 
@@ -76,9 +76,21 @@ const PlatformController = {
 
   removePlatform: async (req, res) => {
     const { platformId } = req.params;
-    const userId = req.userId; // Retrieve the userId from req
 
     try {
+      if (req.headers.authorization == null) {
+        return res.status(401).send({ error: "Unauthorized." });
+      }
+
+      // perform the otp exchange here
+      const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const jwtUserId = decoded.userId;
+
+      if (jwtUserId == null) {
+        return res.status(401).send({ error: "Unauthorized." });
+      }
+
       const transaction = await sequelize.transaction();
 
       try {
@@ -92,7 +104,7 @@ const PlatformController = {
           await transaction.rollback();
           return res
             .status(403)
-            .json({ error: "Unauthorized: You do not own this platform" });
+            .json({ error: "You do not own this platform" });
         }
 
         await Credential.destroy(
