@@ -180,6 +180,14 @@ User Manager Service is in charge of linking the platforms where the bots reside
        }
        ```
 
+     - `409 Conflict` if the user has already added the same user on the same platform. The service will return:
+
+       ```json
+       {
+         "error": "Invalid verification code or may have expired. Please request again."
+       }
+       ```
+
      - `500 Internal Server Error` if
 
        1. the server cannot find the user id and platform in the redis.

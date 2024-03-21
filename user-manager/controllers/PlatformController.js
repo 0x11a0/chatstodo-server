@@ -47,6 +47,18 @@ const PlatformController = {
 
       const transaction = await sequelize.transaction();
 
+      // TODO: Check if the platform and crendetials are the same is already linked to the same user
+      // const existingPlatform = await Platform.findOne({
+      //   where: {
+      //     platformName: platform,
+      //     UserId: jwtUserId,
+      //   },
+      // });
+      // if (existingPlatform) {
+      //   await transaction.rollback();
+      //   return res.status(409).json({ error: "Platform already linked to the user." });
+      // }
+
       try {
         const newCredential = await Credential.create(
           { credentialId: userId, credentialSecret: "x" },
@@ -56,7 +68,7 @@ const PlatformController = {
         const newPlatform = await Platform.create(
           {
             platformName: platform,
-            credentialId: newCredential.id,
+            Credential: newCredential,
             UserId: jwtUserId,
           },
           { transaction }
@@ -104,7 +116,7 @@ const PlatformController = {
           return res.status(404).json({ error: "Platform not found" });
         }
 
-        if (platform.userId !== userId) {
+        if (platform.userId !== jwtUserId) {
           await transaction.rollback();
           return res
             .status(403)
