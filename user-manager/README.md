@@ -223,17 +223,36 @@ User Manager Service is in charge of linking the platforms where the bots reside
    - **Body:** _None required_
    - **Expected Output:**
 
-     ```json
-     [
-        {
-           "platform": "Telegram",
-           "credentials": {
-                 "token": "abc123",
-           }
-        },
-        ...
-     ]
-     ```
+     - `200 Success`
+       ```json
+       [
+           {
+             "platform": "Telegram",
+             "credentials": {
+                   "token": "abc123",
+             }
+           },
+           ...
+       ]
+       ```
+
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+       ```json
+       {
+         "error": "Error fetching platforms."
+       }
+       ```
 
 #### Group
 

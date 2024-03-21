@@ -117,21 +117,32 @@ const PlatformController = {
   },
 
   getPlatforms: async (req, res) => {
-    const userId = req.userId; // Retrieve the userId from req
-
     try {
+      if (req.headers.authorization == null) {
+        return res.status(401).send({ error: "Unauthorized." });
+      }
+
+      // perform the otp exchange here
+      const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const jwtUserId = decoded.userId;
+
+      if (jwtUserId == null) {
+        return res.status(401).send({ error: "Unauthorized." });
+      }
+
       const platforms = await Platform.findAll({
-        where: { UserId: userId }, // Filter by userId
+        where: { UserId: jwtUserId }, // Filter by userId
         include: {
           model: Credential,
           as: "Credential", // Alias for the associated credential
         },
       });
 
-      res.json(platforms);
+      res.status(200).json({ platforms: platforms });
     } catch (error) {
       console.error("Error fetching platforms:", error);
-      res.status(500).json({ error: "Error fetching platforms" });
+      res.status(500).json({ error: "Error fetching platforms." });
     }
   },
 };
