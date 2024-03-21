@@ -114,13 +114,12 @@ User Manager Service is in charge of linking the platforms where the bots reside
        {
          "platform": "Telegram",
          "groups": [
-            
+
          ]
        },
        ...
      ]
      ```
-
 
 ### For Web Client
 
@@ -155,14 +154,45 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
    - **Expected Output:**
 
+     Status code: 201
+
      ```json
      {
        "message": "Platform link added successfully."
      }
      ```
 
-   - **Remarks**
-     Left the implementation of inserting the mapping into database
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `404 Not Found` if the vertification code does not exist. The service will return:
+
+       ```json
+       {
+         "error": "Invalid verification code or may have expired. Please request again."
+       }
+       ```
+
+     - `500 Internal Server Error` if
+
+       1. the server cannot find the user id and platform in the redis.
+
+       1. database transactions error
+
+       The service will return:
+
+       ```json
+       {
+         "error": "Verification details not found for user."
+       }
+       ```
 
 1. **Remove bot platform** (WIP)
 

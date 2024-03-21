@@ -11,6 +11,10 @@ require("dotenv").config();
 const PlatformController = {
   addPlatform: async (req, res) => {
     try {
+      if (req.headers.authorization == null) {
+        return res.status(401).send({ error: "Unauthorized." });
+      }
+
       // perform the otp exchange here
       const token = req.headers.authorization.split(" ")[1]; // Assuming the token is sent as "Bearer <token>"
       const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
@@ -25,9 +29,10 @@ const PlatformController = {
       const storedDetails = await redisClient.get(verificationCode);
 
       if (!storedDetails) {
-        return res
-          .status(404)
-          .send({ error: "Verification details not found for user." });
+        return res.status(404).send({
+          error:
+            "Invalid verification code or may have expired. Please request again.",
+        });
       }
 
       const [keyType, userId, platform] = storedDetails.split(":");
@@ -37,7 +42,7 @@ const PlatformController = {
         userId == null ||
         platform == null
       ) {
-        return res.status(400).send({ error: "Incorrect verification code." });
+        return res.status(500).send({ error: "Bad Request" });
       }
 
       const transaction = await sequelize.transaction();
@@ -57,7 +62,7 @@ const PlatformController = {
 
         await redisClient.del(verificationCode);
 
-        res.status(201).json(newPlatform);
+        res.status(201).json({ message: "Platform link added successfully." });
       } catch (error) {
         await transaction.rollback();
         console.error("Error adding platform:", error);
