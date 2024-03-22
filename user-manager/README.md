@@ -255,13 +255,19 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
      - `200 Success`
        ```json
-       [
-           {
-             "platformName": "Telegram",
-             "credentialId": "13254532"
-           },
-           ...
-       ]
+          {
+             "platforms": [
+                 {
+                     "id": 3,
+                     "platformName": "Telegram",
+                     "credentialId": "",
+                     "createdAt": "",
+                     "updatedAt": "",
+                     "UserId": "<JWT USER ID>"
+                 }
+                ...
+             ]
+         }
        ```
 
    - **Error Responses:**
