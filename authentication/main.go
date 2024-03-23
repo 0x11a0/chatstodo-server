@@ -8,6 +8,7 @@ import (
 	"os"
 
 	cmd "chatstodo/authentication/cmd"
+	"chatstodo/authentication/internal/db"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -16,14 +17,14 @@ import (
 
 var (
 	jwtKey []byte
-	db *sql.DB
+	authDB *sql.DB
 	postgresqlAddress string
 	ctx = context.Background()
 )
 
 func main() {
 	godotenv.Load("../.env")
-	postgresqlAddress = os.Getenv("USER_POSTGRESQL_URL")
+	postgresqlAddress = os.Getenv("AUTH_POSTGRESQL_URL")
 	jwtSecretKey := os.Getenv("JWT_SECRET_KEY")
 	redisAddress := os.Getenv("REDIS_URL")
 
@@ -32,20 +33,29 @@ func main() {
 
 	// Connect to PostgreSQL
     connStr := postgresqlAddress
-    db, err = sql.Open("postgres", connStr)
+    authDB, err = sql.Open("postgres", connStr)
     if err != nil {
         log.Fatal(err)
+		return
     }
 
-    if err = db.Ping(); err != nil {
+    if err = authDB.Ping(); err != nil {
         log.Fatal(err)
+		return
     }
 	log.Println("Connected to PostgreSQL")
+	
+	if err := db.MigrateDatabase(authDB); err != nil {
+		log.Fatalf("Failed to migrate: %v", err)
+		return
+	}
+	log.Println("Migration successful")
 	
 	// Connect to Redis
     opts, err := redis.ParseURL(redisAddress)
     if err != nil {
-        panic(err)
+		log.Fatalf("Failed to enter redis: %v", err)
+		return
     }
 	redisClient := redis.NewClient(opts)
 
@@ -57,8 +67,8 @@ func main() {
 	}
 	log.Println("Connected to Redis")
 
-	cmd.ExecuteCLI(db)
-	cmd.ExecuteAPIServer(db, redisClient, jwtKey)
+	cmd.ExecuteCLI(authDB)
+	cmd.ExecuteAPIServer(authDB, redisClient, jwtKey)
 
     
 }
