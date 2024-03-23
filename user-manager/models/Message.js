@@ -7,7 +7,7 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    sender_user_id: {
+    sender_name: {
       type: String,
       required: true,
     },
