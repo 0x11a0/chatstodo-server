@@ -14,7 +14,8 @@ const Platform = sequelize.define("Platform", {
   },
   lastProcessed: {
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
+    defaultValue: sequelize.literal('NOW()')
   },
 });
 
