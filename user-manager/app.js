@@ -24,6 +24,7 @@ const eventRoutes = require("./routes/EventRoutes");
 const summaryRoutes = require("./routes/SummaryRoutes");
 const groupRoutes = require("./routes/GroupRoutes");
 
+
 // Create an instance of Express
 const app = express();
 userManagementDB.testConnection();

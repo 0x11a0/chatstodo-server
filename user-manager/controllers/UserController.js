@@ -3,6 +3,10 @@ const User = require('../models/User');
 const Platform = require('../models/Platform');
 const Message = require('../models/Message');
 const Group = require('../models/Group');
+const Summary = require('../models/Summary');
+const Event = require('../models/Event');
+const Task = require('../models/Task');
+const { sendMessageData } = require('../services/mlService');
 
 const UserController = {
   createUser: async (req, res) => {
@@ -29,11 +33,13 @@ const UserController = {
     try{
       // req receive UserId
       const userId = req.userId; // Retrieve the userId from req
+      const grpcClient = req.app.locals.grpcClient;
 
       // get all platforms user owns
       let platforms = await Platform.findAll({
           where: { UserId: userId }
       });
+      const platformsFromDB = platforms;
       platforms = platforms.map(p => ({platformName: p.platformName, credentialId: p.credentialId, lastProcessed: p.lastProcessed}));
 
       // loop through all platforms of user
@@ -46,7 +52,7 @@ const UserController = {
 
         // for each group, get the messages from mongodb (search by "group_id" and "platform") since lastProcessed date (found in Platform model)
     
-        for (let {group_id, platform} of groups) {
+        for (let {group_id, group_name, platform} of groups) {
           let lastProcessedDate = new Date(lastProcessed);
           lastProcessedDate.setDate(lastProcessedDate.getDate() - 1); // Subtract one day
           let formattedLastProcessed = lastProcessedDate.toISOString();
@@ -54,12 +60,70 @@ const UserController = {
           let message = await Message.findByGroupIdAndPlatformAndTimestamp(group_id, platform, formattedLastProcessed)
           message = message.map(m => ({"user_id": m.sender_name, chat_message: m.message, timestamp: m.timestamp}));
 
-          allMessages.push({ group: group_id, messages: message});
+          allMessages.push({ group: group_name, platform: platformName, messages: message});
         }
       }
 
+      // get Task, Event and Summary from ML Function
+      for (let group of allMessages) {
+        let results = await sendMessageData(grpcClient, userId, group.messages);
+        const { summary, tasks, events } = results;
+
+        // Add summaries
+        for (let summaryText of summary) {
+          await Summary.create({
+            value: summaryText,
+            UserId: userId,
+            tags: [group.group, group.platform]
+          });
+        }
+
+        // Add tasks
+        for (let task of tasks) {
+            // Check if deadline exists and is not null
+            if (task.deadline) {
+                await Task.create({
+                    value: taskText,
+                    deadline: new Date(deadline),
+                    UserId: userId,
+                    tags: [group.group, group.platform]
+                });
+            } else {
+              await Task.create({
+                  value: task,
+                  UserId: userId,
+                  tags: [group.group, group.platform]
+              });
+            }
+        }
       
-      res.status(200).json(allMessages);
+
+        // Add events
+        for (let event of events) {
+          const dateParts = event.date.split('/');
+          const formattedDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Converts DD/MM/YY to YYYY-MM-DD
+          await Event.create({
+            value: event.event,
+            location: event.location,
+            dateStart: new Date(formattedDate),
+            dateEnd: new Date(formattedDate), // Assuming start and end on the same day, adjust as necessary
+            UserId: userId,
+            tags: [group.group, group.platform]
+          });
+        }
+
+        // Update Last Processed Date
+        const today = new Date().toISOString(); // Get today's date in ISO string format
+
+        for (let platform of platformsFromDB) {
+          await Platform.update(
+            { lastProcessed: today },
+            { where: { id: platform.id } }
+          );
+        }
+      }
+      
+      res.status(200).json({"success": true});
 
     } catch (error) {
       console.error('Error refreshing:', error);

@@ -11,6 +11,7 @@
 const app = require("./app"); // Ensure this path is correct
 const { connectToMongoDB, connectToPostgreSQL } = require("./helper/dbSetup"); // Adjust the path as necessary
 const dotenv = require("dotenv");
+const { initGrpcClient } = require("./services/mlService");
 
 // Load environment variables from .env file
 dotenv.config();
@@ -25,6 +26,11 @@ async function startApp() {
     await connectToPostgreSQL(); // Sync PostgreSQL schema
     console.log("All databases are connected successfully.");
 
+    // Initialize gRPC client
+    const grpcClient = await initGrpcClient();
+    console.log("gRPC client initialized successfully.");
+    app.locals.grpcClient = grpcClient;
+    
     // Start your Express app once the database connections are established
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
