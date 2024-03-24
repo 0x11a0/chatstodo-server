@@ -3,7 +3,11 @@ dotenv.config();
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
 const { JWT } = require("google-auth-library");
+
+// KEY PATH for service account
 const keys = require(process.env.ML_KEY_PATH);
+
+// Proto file
 const PROTO_PATH = process.env.ML_PROTO_PATH;
 
 // Load your proto file
