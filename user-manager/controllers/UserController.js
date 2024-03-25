@@ -43,7 +43,7 @@ const UserController = {
       // req receive UserId
       const userId = req.userId; // Retrieve the userId from req
       const grpcClient = req.app.locals.grpcClient;
-      let hasUpdates = true;
+      let hasUpdates = false;
 
       // get all platforms user owns
       let platforms = await fetchPlatforms(userId);
@@ -70,8 +70,8 @@ const UserController = {
             userId
           );
 
-          if (!haveUpdatesFromRequest) {
-            hasUpdates = false;
+          if (haveUpdatesFromRequest) {
+            hasUpdates = true;
           }
         }
         await updateLastProcessed(platform.id);
