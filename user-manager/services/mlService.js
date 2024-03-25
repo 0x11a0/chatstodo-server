@@ -1,17 +1,11 @@
 const dotenv = require("dotenv");
 dotenv.config();
-const { JWT } = require("google-auth-library");
 const grpc = require("@grpc/grpc-js");
-const protoLoader = require("@grpc/proto-loader");
-const { Timestamp } = require("google-protobuf/google/protobuf/timestamp_pb");
-
-// Proto file
-const PROTO_PATH = process.env.ML_PROTO_PATH;
-
-// Load your proto file
-const packageDefinition = protoLoader.loadSync(PROTO_PATH, {});
-const protoDescriptor = grpc.loadPackageDefinition(packageDefinition);
-const chatstodo_ml_service = protoDescriptor.chatstodo_ml_service;
+const { JWT } = require("google-auth-library");
+const {
+  ChatAnalysisServiceClient,
+} = require("../generated/chatstodo_ml_service_grpc_pb");
+const messages = require("../generated/chatstodo_ml_service_pb");
 
 // Cloud Run service URL (without the protocol)
 const isProd = process.env.IS_PROD.toLowerCase() === "true";
@@ -42,7 +36,7 @@ async function initGrpcClient() {
     creds = grpc.credentials.createInsecure();
   }
 
-  return new chatstodo_ml_service.ChatAnalysisService(serviceURL, creds);
+  return new ChatAnalysisServiceClient(serviceURL, creds);
 }
 
 let grpcClient;
@@ -55,22 +49,32 @@ initGrpcClient()
 // Helper function to send message data
 function sendMessageData(grpcClient, userId, messageArray) {
   return new Promise((resolve, reject) => {
-    const timestamp = new messages.Timestamp();
-    timestamp.fromDate(new Date());
+    const request = new messages.UserChatRequest();
+    request.setUserId(userId);
 
-    const request = {
-      message_text: messageArray,
-      timestamp: timestamp,
-      user_id: userId,
-    };
+    const timestamp = new messages.google.protobuf.Timestamp();
+    timestamp.fromDate(new Date());
+    request.setTimestamp(timestamp);
+
+    chatMessages.forEach((chatMsg) => {
+      const chat = new messages.Chat();
+      chat.setUserId(chatMsg.user_id);
+      chat.setChatMessage(chatMsg.chat_message);
+
+      const msgTimestamp = new messages.google.protobuf.Timestamp();
+      msgTimestamp.fromDate(new Date(chatMsg.timestamp));
+      chat.setTimestamp(msgTimestamp);
+
+      request.addMessageText(chat);
+    });
 
     grpcClient.analyzeChat(request, (error, response) => {
       if (error) {
         console.error("Error:", error);
-        reject(error); // Reject the promise on error
+        reject(error);
       } else {
         console.log("Chat Analysis Response:", response);
-        resolve(response); // Resolve the promise with the response
+        resolve(response);
       }
     });
   });

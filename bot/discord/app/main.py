@@ -84,7 +84,7 @@ async def on_message(message):
     platform = "discord"
     sender_name = message.author.name
     group_id = message.channel.id
-    timestamp = message.created_at.isoformat()
+    timestamp = message.created_at
     message = message.content
 
     kafka_parcel = {"platform": platform, "sender_name": sender_name,
@@ -157,7 +157,7 @@ async def track(ctx):
             "group_id": str(guild_id),
             "group_name": str(guild_name),
             "platform": "Discord",
-            "created_at": datetime.datetime.now(datetime.timezone.utc).isoformat()
+            "created_at": datetime.datetime.now(datetime.UTC)
         }
 
         does_user_exist_in_guild = await check_user_exists_in_guild(user_id, guild_id, groups_db, bot)

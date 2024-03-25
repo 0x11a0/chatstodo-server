@@ -1,17 +1,15 @@
 ARG PYTHON_VERSION=3.11.8
-FROM python:${PYTHON_VERSION}-slim as base
 
+# Builder stage
+FROM python:${PYTHON_VERSION}-slim as builder
 WORKDIR /app
-
-# Copy the source code into the container.
-COPY ./app /app
 COPY requirements.txt .
-
-# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port that the application listens on.
+# Final stage
+FROM python:${PYTHON_VERSION}-slim
+WORKDIR /app
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+COPY ./app /app
 EXPOSE 8002
-
-# Run the application.
 CMD ["python", "-u", "main.py"]

@@ -21,6 +21,11 @@ class ChatAnalysisServiceImpl(chatstodo_ml_service_pb2_grpc.ChatAnalysisServiceS
     def AnalyzeChat(self, request, context):
         print("Request coming in", request)
 
+        if not request.message_text:
+            print("No messages to process")
+            # no messages to process return as
+            return chatstodo_ml_service_pb2.ChatAnalysisResponse()
+
         # Extract chat messages from request
         chat_messages = [
             chat_message.chat_message for chat_message in request.message_text]

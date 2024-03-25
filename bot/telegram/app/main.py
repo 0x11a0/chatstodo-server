@@ -83,7 +83,7 @@ async def handle_track_group(message):
         "group_id": str(group_id),
         "group_name": str(group_name),
         "platform": "Telegram",
-        "created_at": datetime.datetime.now(datetime.UTC).isoformat()
+        "created_at": datetime.datetime.now(datetime.UTC)
     }
 
     does_user_belong_to_group = await check_user_belongs_to_group(user_id, group_id, groups_db, bot)
@@ -254,7 +254,7 @@ async def listen_to_group_messages(message):
         "platform": "Telegram",
         "sender_name": message.from_user.first_name,
         "group_id": message.chat.id,
-        "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
+        "timestamp": datetime.datetime.now(datetime.UTC),
         "message": message.text
     }
 

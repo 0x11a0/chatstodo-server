@@ -20,9 +20,9 @@ const groupSchema = new mongoose.Schema(
       required: true,
     },
     created_at: {
-      type: String,
+      type: Date,
       required: true,
-      default: () => new Date().toISOString(),
+      default: () => new Date(),
     },
   },
   {

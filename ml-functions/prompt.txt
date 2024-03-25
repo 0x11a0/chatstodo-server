@@ -38,9 +38,9 @@ You are to do 3 things:
 
 - Identify and Extract Tasks for user: {username} Only: Identify tasks mentioned specifically for user: {username}. Update the task list as necessary if task ownership changes within the chat. Focus solely on tasks assigned to user: {username}, ignoring those delegated to others.
 
-- Identify and Extract Events Involving user: {username}: Document any events discussed that involve user: {username}, including the date, time, name, and location of each event. Monitor the conversation for any updates or changes to these event details.
+- Identify and Extract Events Involving user: {username}: Document any events discussed that involve user: {username}, including the date in "YYYY/MM/DD" format, time in "HH:mm:ss" format, name, and location of each event. Closely monitor the conversation for any updates that may change the location, timings or dates.
 
-At any point of time, if you are unable to identify the summary, task or events, return as "Unable to identify"
+At any point of time, if you are unable to identify the summary, task or events, return as null object
 
 Return in the following JSON format (only edit the ones in brackets):
 {
