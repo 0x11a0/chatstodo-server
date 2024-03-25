@@ -12,11 +12,13 @@ import asyncio
 
 from bot.commands import COMMANDS
 from db.mongodb import MongoDBHandler
+import jwt
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 UPSTASH_KAFKA_SERVER = os.getenv("UPSTASH_KAFKA_SERVER")
 UPSTASH_KAFKA_USERNAME = os.getenv('UPSTASH_KAFKA_USERNAME')
 UPSTASH_KAFKA_PASSWORD = os.getenv('UPSTASH_KAFKA_PASSWORD')
@@ -238,9 +240,43 @@ async def handle_help(message):
     await bot.reply_to(message, reply)
 
 
+# TODO: FIX FORMATTING
 @bot.message_handler(commands=["summary"], func=lambda message: message.chat.type in ["private"])
 async def handle_summary(message):
-    await bot.reply_to(message, "summary")
+    api_url = "http://user-manager:8081/users/api/v1/bot/all"
+
+    user_id = str(message.from_user.id)
+    platform = "Telegram"
+    payload = {"credentialId": user_id, "platformName": platform}
+
+    jwt_token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+    headers = {"Authorization": f"Bearer {jwt_token}"}
+    print(jwt_token)
+
+    response = requests.get(api_url, headers=headers)
+    x = response.json()
+    print("response", x)
+    reply = ""
+    reply += "Here is the summary of your account:\n"
+
+    for value in x["summary"]:
+        reply += f"{value}\n"
+
+    reply += "\n"
+
+    reply += "Here are the tasks of your account:\n"
+
+    for value in x["tasks"]:
+        reply += f"{value}\n"
+
+    reply += "\n"
+
+    reply += "Here are the events of your account:\n"
+
+    for value in x["events"]:
+        reply += f"{value}\n"
+
+    await bot.reply_to(message, reply)
 
 
 @bot.message_handler(commands=["feedbacks"], func=lambda message: message.chat.type in ["private"])

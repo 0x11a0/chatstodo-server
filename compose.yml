@@ -56,7 +56,7 @@ services:
     container_name: telegram
     restart: always
     build:
-      context: ./bot/telegram
+      context: ./telegram
       dockerfile: Dockerfile
     ports:
       - "8001:8001"
@@ -69,7 +69,7 @@ services:
     container_name: discord
     restart: always
     build:
-      context: ./bot/discord
+      context: ./discord
       dockerfile: Dockerfile
     ports:
       - "8002:8002"
