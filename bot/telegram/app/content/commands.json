@@ -1,0 +1,31 @@
+{
+  "start": {
+    "message": "\ud83e\udd16<b>ChatsTodo - Your Virtual Assistant</b>\n\nCommands:\n/connect - Link to your Chatstodo account!\n/summary - Get a summary, tasks and events of your group chats that you are tracking!\n/track - Use this in a group that I am in to start tracking it.\n/viewGroups - Get a list of groups that you are tracking.\n/deleteGroups - Stop tracking a group.\n\n/help - For any questions or assistance",
+    "description": "Initiates the bot."
+  },
+  "help": {
+    "message": "Need some guidance? Here you can learn how to use all the features I offer, including\n\n/summary - viewing summaries, tasks and events of your groups\n/feedbacks - provide feedbacks here\n/track - Use this in a group that I am in to start tracking it (only in groups).\n/viewGroups - Get a list of groups that you are tracking.\n/deleteGroups - Stop tracking a group.\n\nJust type a command!",
+    "description": "Provides help on how to use the bot effectively."
+  },
+  "summary": {
+    "message": "Interested in a quick glance at what's going on? I'll bring up a summary, actionables and events of the latest discussions",
+    "description": "Displays a summary, actionables and events of the latest discussions",
+    "null": "Currently, there are no updates to summarise.",
+    "error": "I ran into a problem trying to fetch the summary. Could you try again later?"
+  },
+  "feedbacks": {
+    "message": "Your feedback is invaluable to us.\n\nShare your thoughts, suggestions, or report any issues you're facing, and help us make ChatsTodo even better for you.",
+    "description": "Provide feedback on your experience with the bot, suggest improvements, or report issues.",
+    "error": "We're sorry, but we're currently unable to process your feedback. Please try again after some time."
+  },
+  "viewGroups": {
+    "message": "View the groups that you are tracking.",
+    "description": "View the groups that you are tracking.",
+    "error": "We're sorry, but we're currently unable to process your request. Please try again after some time."
+  },
+  "deleteGroups": {
+    "message": "Delete a group that you are tracking.",
+    "description": "Delete a group that you are tracking.",
+    "error": "We're sorry, but we're currently unable to process your request. Please try again after some time."
+  }
+}
