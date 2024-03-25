@@ -6,7 +6,7 @@ const Group = require("../models/Group");
 const Summary = require("../models/Summary");
 const Event = require("../models/Event");
 const Task = require("../models/Task");
-const { sendMessageData } = require("../services/mlService");
+const { Timestamp } = require("google-protobuf/google/protobuf/timestamp_pb");
 
 const UserController = {
   createUser: async (req, res) => {
@@ -42,115 +42,39 @@ const UserController = {
       // req receive UserId
       const userId = req.userId; // Retrieve the userId from req
       const grpcClient = req.app.locals.grpcClient;
-      console.log("Running grpc", grpcClient);
 
       // get all platforms user owns
       let platforms = await fetchPlatforms(userId);
 
-      const platformsFromDB = platforms;
-      platforms = platforms.map((p) => ({
-        platformName: p.platformName,
-        credentialId: p.credentialId,
-        lastProcessed: p.lastProcessed,
-      }));
-
       // loop through all platforms of user
-      let allMessages = [];
-      for (let { platformName, credentialId, lastProcessed } of platforms) {
+      for (const platform of platforms) {
         // get all groups the user is in for each platform
-        const groups = await Group.find({
-          user_id: credentialId,
-        });
-
-        // for each group, get the messages from mongodb (search by "group_id" and "platform") since
-        // lastProcessed date (found in Platform model)
-        for (let { group_id, group_name, platform } of groups) {
-          let lastProcessedDate = new Date(lastProcessed);
-          lastProcessedDate.setDate(lastProcessedDate.getDate() - 1); // Subtract one day
-          let formattedLastProcessed = lastProcessedDate.toISOString();
-
-          console.log(formattedLastProcessed);
-
-          let message = await Message.findByGroupIdAndPlatformAndTimestamp(
-            group_id,
-            platform,
-            formattedLastProcessed
+        const groups = await Group.find({ user_id: platform.credentialId });
+        for (const group of groups) {
+          const messages = await Message.findByGroupIdAndPlatformAndTimestamp(
+            group.group_id,
+            platform.platformName,
+            platform.lastProcessed
           );
 
-          console.log("Messages retrieved", message);
+          const chatMessages = prepareChatMessages(messages);
+          const chatAnalysisRequest = createChatAnalysisRequest(
+            userId,
+            chatMessages
+          );
+          const chatAnalysisResponse = await sendChatAnalysisRequest(
+            grpcClient,
+            chatAnalysisRequest
+          );
 
-          message = message.map((m) => ({
-            user_id: m.sender_name,
-            chat_message: m.message,
-            timestamp: m.timestamp,
-          }));
-
-          allMessages.push({
-            group: group_name,
-            platform: platformName,
-            messages: message,
-          });
-        }
-      }
-
-      console.log("All messages", allMessages);
-
-      // get Task, Event and Summary from ML Function
-      for (let group of allMessages) {
-        let results = await sendMessageData(grpcClient, userId, group.messages);
-        const { summary, tasks, events } = results;
-
-        // Add summaries
-        for (let summaryText of summary) {
-          await Summary.create({
-            value: summaryText,
-            UserId: userId,
-            tags: [group.group, group.platform],
-          });
-        }
-
-        // Add tasks
-        for (let task of tasks) {
-          // Check if deadline exists and is not null
-          if (task.deadline) {
-            await Task.create({
-              value: taskText,
-              deadline: new Date(deadline),
-              UserId: userId,
-              tags: [group.group, group.platform],
-            });
-          } else {
-            await Task.create({
-              value: task,
-              UserId: userId,
-              tags: [group.group, group.platform],
-            });
-          }
-        }
-
-        // Add events
-        for (let event of events) {
-          const dateParts = event.date.split("/");
-          const formattedDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Converts DD/MM/YY to YYYY-MM-DD
-          await Event.create({
-            value: event.event,
-            location: event.location,
-            dateStart: new Date(formattedDate),
-            dateEnd: new Date(formattedDate), // Assuming start and end on the same day, adjust as necessary
-            UserId: userId,
-            tags: [group.group, group.platform],
-          });
-        }
-
-        // Update Last Processed Date
-        const today = new Date().toISOString(); // Get today's date in ISO string format
-
-        for (let platform of platformsFromDB) {
-          await Platform.update(
-            { lastProcessed: today },
-            { where: { id: platform.id } }
+          await processChatAnalysisResponse(
+            chatAnalysisResponse,
+            group.group_name,
+            platform.platformName,
+            userId
           );
         }
+        await updateLastProcessed(platform.id);
       }
 
       res.status(200).json({ success: true });
@@ -165,6 +89,99 @@ async function fetchPlatforms(userId) {
   return Platform.findAll({
     where: { UserId: userId },
   });
+}
+
+function prepareChatMessages(messages) {
+  const currentTimestamp = new Timestamp();
+  currentTimestamp.fromDate(new Date());
+
+  return messages.map((m) => ({
+    user_id: m.sender_name,
+    chat_message: m.message,
+    timestamp: currentTimestamp,
+  }));
+}
+
+function createChatAnalysisRequest(userId, chatMessages) {
+  const currentTimestamp = new Timestamp();
+  currentTimestamp.fromDate(new Date());
+
+  return {
+    user_id: userId,
+    timestamp: currentTimestamp,
+    message_text: chatMessages,
+  };
+}
+
+function sendChatAnalysisRequest(grpcClient, chatAnalysisRequest) {
+  return new Promise((resolve, reject) => {
+    grpcClient.analyzeChat(chatAnalysisRequest, (error, response) => {
+      if (error) {
+        console.error("Error sending chat analysis request:", error);
+        reject(error);
+      } else {
+        resolve(response);
+      }
+    });
+  });
+}
+
+async function processChatAnalysisResponse(
+  response,
+  groupName,
+  platformName,
+  userId
+) {
+  const { summary, tasks, events } = response;
+
+  // Add summaries
+  for (let summaryText of summary) {
+    await Summary.create({
+      value: summaryText,
+      UserId: userId,
+      tags: [groupName, platformName],
+    });
+  }
+
+  // Add tasks
+  for (let task of tasks) {
+    // Check if deadline exists and is not null
+    if (task.deadline) {
+      await Task.create({
+        value: taskText,
+        deadline: new Date(deadline),
+        UserId: userId,
+        tags: [groupName, platformName],
+      });
+    } else {
+      await Task.create({
+        value: task,
+        UserId: userId,
+        tags: [groupName, platformName],
+      });
+    }
+  }
+
+  // Add events
+  for (let event of events) {
+    // const dateParts = event.date.split("/");
+    // const formattedDate = `20${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`; // Converts DD/MM/YY to YYYY-MM-DD
+    await Event.create({
+      value: event.event,
+      location: event.location,
+      dateStart: new Date(event.date),
+      dateEnd: new Date(event.date), // Assuming start and end on the same day, adjust as necessary
+      UserId: userId,
+      tags: [groupName, platformName],
+    });
+  }
+}
+
+async function updateLastProcessed(platformId) {
+  await Platform.update(
+    { lastProcessed: new Date() },
+    { where: { id: platformId } }
+  );
 }
 
 module.exports = UserController;

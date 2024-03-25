@@ -3,6 +3,7 @@ dotenv.config();
 const { JWT } = require("google-auth-library");
 const grpc = require("@grpc/grpc-js");
 const protoLoader = require("@grpc/proto-loader");
+const { Timestamp } = require("google-protobuf/google/protobuf/timestamp_pb");
 
 // Proto file
 const PROTO_PATH = process.env.ML_PROTO_PATH;
@@ -40,7 +41,7 @@ async function initGrpcClient() {
     // Use insecure credentials for local development
     creds = grpc.credentials.createInsecure();
   }
-  
+
   return new chatstodo_ml_service.ChatAnalysisService(serviceURL, creds);
 }
 
@@ -54,7 +55,9 @@ initGrpcClient()
 // Helper function to send message data
 function sendMessageData(grpcClient, userId, messageArray) {
   return new Promise((resolve, reject) => {
-    const timestamp = { seconds: Math.floor(Date.now() / 1000), nanos: 0 };
+    const timestamp = new messages.Timestamp();
+    timestamp.fromDate(new Date());
+
     const request = {
       message_text: messageArray,
       timestamp: timestamp,
