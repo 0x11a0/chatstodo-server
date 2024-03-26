@@ -256,27 +256,8 @@ async def handle_summary(message):
     response = requests.get(api_url, headers=headers)
     x = response.json()
     print("response", x)
-    reply = ""
-    reply += "Here is the summary of your account:\n"
 
-    for value in x["summary"]:
-        reply += f"{value}\n"
-
-    reply += "\n"
-
-    reply += "Here are the tasks of your account:\n"
-
-    for value in x["tasks"]:
-        reply += f"{value}\n"
-
-    reply += "\n"
-
-    reply += "Here are the events of your account:\n"
-
-    for value in x["events"]:
-        reply += f"{value}\n"
-
-    await bot.reply_to(message, reply)
+    await bot.reply_to(message, x["message"])
 
 
 @bot.message_handler(commands=["feedbacks"], func=lambda message: message.chat.type in ["private"])
