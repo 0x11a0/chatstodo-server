@@ -12,10 +12,14 @@ const Platform = sequelize.define("Platform", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  credentialName: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   lastProcessed: {
     type: DataTypes.DATE,
     allowNull: true,
-    defaultValue: sequelize.literal('NOW()')
+    defaultValue: sequelize.literal("NOW()"),
   },
 });
 

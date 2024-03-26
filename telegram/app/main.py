@@ -67,7 +67,7 @@ async def handle_start(message):
 async def handle_connect_to_chatstodo(message):
     api_url = "http://authentication:8080/auth/api/v1/bot/request-code"
     user_credentials = {"userId": str(
-        message.from_user.id), "platform": "Telegram"}
+        message.from_user.id), "userName": message.from_user.first_name, "platform": "Telegram"}
     response = requests.post(api_url, json=user_credentials)
     x = response.json()
     code = x["verification_code"]

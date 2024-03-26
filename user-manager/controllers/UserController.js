@@ -60,7 +60,10 @@ const UserController = {
           );
 
           const chatMessages = prepareChatMessages(messages);
-          const request = createChatAnalysisRequest(userId, chatMessages);
+          const request = createChatAnalysisRequest(
+            platform.credentialName,
+            chatMessages
+          );
           const response = await sendChatAnalysisRequest(grpcClient, request);
 
           const haveUpdatesFromRequest = await processChatAnalysisResponse(
