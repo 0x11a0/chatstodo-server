@@ -52,8 +52,6 @@ exports.isPlatformAuthenticated = async (req, res, next) => {
   try {
     const decodedData = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    console.log("decoded", decodedData);
-
     let platform = await Platform.findOne({
       where: {
         platformName: decodedData.platformName,
@@ -67,6 +65,7 @@ exports.isPlatformAuthenticated = async (req, res, next) => {
 
     req.platformName = platform.platformName;
     req.credentialId = platform.credentialId;
+    req.credentialName = platform.credentialName;
     req.userId = platform.UserId;
     req.token = token;
 

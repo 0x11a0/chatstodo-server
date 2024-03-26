@@ -65,13 +65,46 @@ async def handle_start(message):
 
 @bot.message_handler(commands=["connect"], func=lambda message: message.chat.type in ["private"])
 async def handle_connect_to_chatstodo(message):
-    api_url = "http://authentication:8080/auth/api/v1/bot/request-code"
+    api_url = ""
+    try:
+        api_url = os.environ.get("INTERNAL_URL_GET_VERIFICATION_CODE")
+    except Exception as e:
+        await bot.reply_to(message, f"Currently we are facing difficulties generating the code. Please try again later.")
+
     user_credentials = {"userId": str(
         message.from_user.id), "userName": message.from_user.first_name, "platform": "Telegram"}
     response = requests.post(api_url, json=user_credentials)
     x = response.json()
     code = x["verification_code"]
     await bot.reply_to(message, f"Here is your code {code}")
+
+
+@bot.message_handler(commands=["refresh"], func=lambda message: message.chat.type in ["private"])
+async def handle_refresh_from_chatstodo(message):
+    api_url = ""
+    try:
+        api_url = os.environ.get("INTERNAL_URL_REFRESH")
+    except Exception as e:
+        await bot.reply_to(message, f"Currently we are facing difficulties refreshing. Please try again later.")
+
+    user_id = str(message.from_user.id)
+    user_name = message.from_user.first_name
+    platform = "Telegram"
+    payload = {"credentialId": user_id,
+               "credentialName": user_name, "platformName": platform}
+
+    jwt_token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+    headers = {"Authorization": f"Bearer {jwt_token}"}
+
+    response = requests.get(api_url, headers=headers)
+    x = response.json()
+
+    # when there is a response and the message in it
+    if x and "message" in x:
+        await bot.reply_to(message, "Successfully refresh! Please check again with /summary")
+        return
+
+    await bot.reply_to(message, "There are no updates.")
 
 
 @bot.message_handler(commands=["track"], func=lambda message: message.chat.type in ["group", "supergroup"])
@@ -240,22 +273,25 @@ async def handle_help(message):
     await bot.reply_to(message, reply)
 
 
-# TODO: FIX FORMATTING
 @bot.message_handler(commands=["summary"], func=lambda message: message.chat.type in ["private"])
 async def handle_summary(message):
-    api_url = "http://user-manager:8081/users/api/v1/bot/all"
+    api_url = ""
+    try:
+        api_url = os.environ.get("INTERNAL_URL_GET_ALL_DATA")
+    except Exception as e:
+        await bot.reply_to(message, f"Currently we are facing difficulties getting summaries. Please try again later.")
 
     user_id = str(message.from_user.id)
+    user_name = message.from_user.first_name
     platform = "Telegram"
-    payload = {"credentialId": user_id, "platformName": platform}
+    payload = {"credentialId": user_id,
+               "credentialName": user_name, "platformName": platform}
 
     jwt_token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
     headers = {"Authorization": f"Bearer {jwt_token}"}
-    print(jwt_token)
 
     response = requests.get(api_url, headers=headers)
     x = response.json()
-    print("response", x)
 
     await bot.reply_to(message, x["message"])
 
@@ -271,14 +307,14 @@ async def listen_to_group_messages(message):
         "platform": "Telegram",
         "sender_name": message.from_user.first_name,
         "group_id": message.chat.id,
-        "timestamp": datetime.datetime.now(datetime.UTC),
         "message": message.text
     }
 
     kafka_parcel_string = json.dumps(kafka_parcel)
 
     try:
-        producer.produce(topic, kafka_parcel_string, callback=acked)
+        producer.produce(topic,
+                         kafka_parcel_string.encode('utf-8'), callback=acked)
         producer.poll(1)
     except Exception as e:
         print(f"Error producing message: {e}")

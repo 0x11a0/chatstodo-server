@@ -10,4 +10,6 @@ router.get(
   BotController.aggregateForPlatform
 );
 
+router.get("/bot/refresh", isPlatformAuthenticated, BotController.refresh);
+
 module.exports = router;
