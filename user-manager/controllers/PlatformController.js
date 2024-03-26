@@ -34,7 +34,7 @@ const PlatformController = {
         });
       }
 
-      const [keyType, userId, platform] = storedDetails.split(":");
+      const [keyType, userId, userName, platform] = storedDetails.split(":");
 
       if (
         keyType !== "user_verification" ||
@@ -53,10 +53,12 @@ const PlatformController = {
           UserId: jwtUserId,
         },
       });
-      
+
       if (existingPlatform) {
         await transaction.rollback();
-        return res.status(409).json({ error: "Platform already linked to the user." });
+        return res
+          .status(409)
+          .json({ error: "Platform already linked to the user." });
       }
 
       try {
@@ -64,6 +66,7 @@ const PlatformController = {
           {
             platformName: platform,
             credentialId: userId,
+            credentialName: userName,
             UserId: jwtUserId,
           },
           { transaction }

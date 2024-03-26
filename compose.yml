@@ -10,8 +10,6 @@ services:
       - "8080:8080"
     env_file:
       - .env
-    networks:
-      - chatstodo
 
   user-manager:
     container_name: user-manager
@@ -23,8 +21,6 @@ services:
       - "8081:8081"
     env_file:
       - .env
-    networks:
-      - chatstodo
 
   anonymiser:
     container_name: anonymiser
@@ -36,8 +32,6 @@ services:
       - "8082:8082"
     env_file:
       - .env
-    networks:
-      - chatstodo
 
   ml-functions:
     container_name: ml-functions
@@ -49,8 +43,6 @@ services:
       - "51000:51000"
     env_file:
       - .env
-    networks:
-      - chatstodo
 
   telegram:
     container_name: telegram
@@ -62,8 +54,6 @@ services:
       - "8001:8001"
     env_file:
       - .env
-    networks:
-      - chatstodo
 
   discord:
     container_name: discord
@@ -75,10 +65,3 @@ services:
       - "8002:8002"
     env_file:
       - .env
-    networks:
-      - chatstodo
-
-networks:
-  chatstodo:
-    name: chatstodo
-    driver: bridge

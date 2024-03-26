@@ -127,8 +127,8 @@ async def connect(ctx):
     if isinstance(ctx.channel, discord.DMChannel):
         api_url = "http://authentication:8080/auth/api/v1/bot/request-code"
 
-        user_credentials = {"userId": str(
-            ctx.author.id), "platform": "Discord"}
+        user_credentials = {"userId": str(ctx.author.id), "userName": str(
+            ctx.author.name), "platform": "Discord"}
 
         response = requests.post(api_url, json=user_credentials)
 

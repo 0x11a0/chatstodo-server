@@ -56,6 +56,7 @@ func healthHandler(dbConnection *sql.DB, redisClient *redis.Client) gin.HandlerF
 func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 	var requestBody struct {
 		UserId     string `json:"userId"`
+		UserName  string `json:"userName"`
 		Platform string `json:"platform"`
 	}
 
@@ -74,7 +75,7 @@ func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 		code := generateAuthCode()
 
 		ctx := context.Background()
-		err := storeAuthtoUserID(ctx, redisClient, requestBody.UserId, requestBody.Platform, code)
+		err := storeAuthtoUserID(ctx, redisClient, requestBody.UserId, requestBody.UserName, requestBody.Platform, code)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error storing user verification code"})
 			log.Printf("%v",err)
@@ -84,10 +85,10 @@ func botConnectHandler(redisClient *redis.Client) gin.HandlerFunc {
 	}
 }
 
-func storeAuthtoUserID(ctx context.Context, redisClient *redis.Client, userId string, platform string, code string) error {
+func storeAuthtoUserID(ctx context.Context, redisClient *redis.Client, userId string, userName string, platform string, code string) error {
 	expiration := 7 * time.Minute
 	// TODO: if the code exists, dont store it again
-	return redisClient.Set(ctx, code, fmt.Sprintf("user_verification:%s:%s", userId, platform), expiration).Err()
+	return redisClient.Set(ctx, code, fmt.Sprintf("user_verification:%s:%s:%s", userId, userName, platform), expiration).Err()
 }
 
 func generateAuthCode() string {
