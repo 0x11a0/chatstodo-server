@@ -23,7 +23,7 @@ const taskRoutes = require("./routes/TaskRoutes");
 const eventRoutes = require("./routes/EventRoutes");
 const summaryRoutes = require("./routes/SummaryRoutes");
 const groupRoutes = require("./routes/GroupRoutes");
-
+const botRoutes = require("./routes/BotRoutes");
 
 // Create an instance of Express
 const app = express();
@@ -57,6 +57,7 @@ app.use("/users/api/v1", taskRoutes);
 app.use("/users/api/v1", eventRoutes);
 app.use("/users/api/v1", summaryRoutes);
 app.use("/users/api/v1", groupRoutes);
+app.use("/users/api/v1", botRoutes);
 
 // Error handling middleware
 

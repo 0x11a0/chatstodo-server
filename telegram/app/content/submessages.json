@@ -1,0 +1,5 @@
+{
+  "on_added": {
+    "message": "\ud83e\udd16<b>ChatsTodo - Your Virtual Assistant</b>\n\nCommands:\n/task - See your upcoming tasks\n/event - See your upcoming events\n/summary - Get a summary of your group chat\n/all - Get everything above!\n\n/help - For any questions or assistance"
+  }
+}

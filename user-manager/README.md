@@ -46,6 +46,17 @@ User Manager Service is an aggregator service that handles the retrieval and man
 
    By default, the server runs on `http://localhost:3000`.
 
+### Set up gRPC
+
+```
+grpc_tools_node_protoc \
+--js_out=import_style=commonjs,binary:./generated \
+--grpc_out=grpc_js:./generated \
+--proto_path=./protos \
+./protos/chatstodo_ml_service.proto
+
+```
+
 ## Interactions with other services
 
 #### Bots

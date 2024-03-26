@@ -20,9 +20,9 @@ const messageSchema = new mongoose.Schema(
       required: true,
     },
     timestamp: {
-      type: String,
+      type: Date,
       required: true,
-      default: () => new Date().toISOString(),
+      default: () => new Date(),
     },
   },
   {
@@ -33,14 +33,16 @@ const messageSchema = new mongoose.Schema(
 messageSchema.statics.findByGroupIdAndPlatformAndTimestamp = async function (
   group_id,
   platform,
-  start_timestamp
+  lastProcessed
 ) {
-  // find mathcing group id and platform, then find from start_timestamp
+  const converted = new Date(lastProcessed);
+  console.log(lastProcessed, converted);
+
   return this.find({
     group_id,
     platform,
-    timestamp: { $gte: start_timestamp },
-  });
+    timestamp: { $gt: converted },
+  }).sort({ timestamp: 1 });
 };
 
 const Message = mongoose.model("Message", messageSchema);

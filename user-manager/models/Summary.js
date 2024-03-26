@@ -1,17 +1,17 @@
 // Summary.js
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/postgresql');
-const User = require('./User');
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../services/postgresql");
+const User = require("./User");
 
-const Summary = sequelize.define('Summary', {
+const Summary = sequelize.define("Summary", {
   value: {
     type: DataTypes.TEXT,
-    allowNull: false
+    allowNull: false,
   },
   tags: {
     type: DataTypes.ARRAY(DataTypes.STRING),
-    defaultValue: []
-  }
+    defaultValue: [],
+  },
 });
 
 Summary.belongsTo(User);
