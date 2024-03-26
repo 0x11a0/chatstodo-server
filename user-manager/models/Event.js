@@ -13,11 +13,11 @@ const Event = sequelize.define('Event', {
   },
   dateStart: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: true
   },
   dateEnd: {
     type: DataTypes.DATE,
-    allowNull: false
+    allowNull: true
   },
   tags: {
     type: DataTypes.ARRAY(DataTypes.STRING),

@@ -5,7 +5,7 @@ const User = require('./User');
 
 const Summary = sequelize.define('Summary', {
   value: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: false
   },
   tags: {
