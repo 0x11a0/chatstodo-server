@@ -8,7 +8,7 @@ const {
 const messages = require("../generated/chatstodo_ml_service_pb");
 
 // Cloud Run service URL (without the protocol)
-const isProd = process.env.IS_PROD.toLowerCase() === "true";
+const isProd = process.env.ML_USE_CLOUD_RUN.toLowerCase() === "true";
 let serviceURL = isProd ? process.env.ML_URL : process.env.ML_LOCAL_URL;
 let keys = isProd ? require(process.env.ML_KEY_PATH) : {};
 
