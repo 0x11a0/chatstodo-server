@@ -36,7 +36,6 @@ messageSchema.statics.findByGroupIdAndPlatformAndTimestamp = async function (
   lastProcessed
 ) {
   const converted = new Date(lastProcessed);
-  console.log(lastProcessed, converted);
 
   return this.find({
     group_id,

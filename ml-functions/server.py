@@ -26,9 +26,22 @@ class ChatAnalysisServiceImpl(chatstodo_ml_service_pb2_grpc.ChatAnalysisServiceS
             # no messages to process return as
             return chatstodo_ml_service_pb2.ChatAnalysisResponse()
 
-        # Extract chat messages from request
-        chat_messages = [
-            chat_message.chat_message for chat_message in request.message_text]
+        # token limit
+        chat_messages = sorted(
+            request.message_text,
+            key=lambda msg: msg.timestamp.ToDatetime(),
+            reverse=True
+        )
+
+        token_budget = 30000
+        average_tokens_per_message = 4
+        max_messages = token_budget // average_tokens_per_message
+
+        chat_messages = chat_messages[:max_messages]
+
+        # Convert chat messages to text format for processing
+        chat_texts = [msg.chat_message for msg in chat_messages]
+
         user_id = request.user_id
 
         processed_chat = ""
@@ -47,7 +60,7 @@ class ChatAnalysisServiceImpl(chatstodo_ml_service_pb2_grpc.ChatAnalysisServiceS
         # Process the messages
         try:
             processed_chat = self.openai_helper.analyze_chat(
-                user_id, chat_messages)
+                user_id, chat_texts)
             processed_chat = json.loads(processed_chat)
 
             if processed_chat:

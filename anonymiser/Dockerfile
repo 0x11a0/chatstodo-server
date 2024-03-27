@@ -1,6 +1,8 @@
 ARG PYTHON_VERSION=3.11.8
 FROM python:${PYTHON_VERSION}-alpine as base
 
+ENV PYTHONUNBUFFERED True
+
 RUN apk add --no-cache \
     gcc \
     musl-dev \

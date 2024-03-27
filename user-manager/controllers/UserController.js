@@ -97,7 +97,7 @@ const UserController = {
 };
 
 async function fetchPlatforms(userId) {
-  return Platform.findAll({
+  return await Platform.findAll({
     where: { UserId: userId },
   });
 }
