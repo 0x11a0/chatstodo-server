@@ -12,6 +12,7 @@ from db.mongodb import MongoDBHandler  # for mongodb
 import jwt
 
 # load the environment variables
+dotenv_path = join(dirname(__file__), '.env')
 load_dotenv()
 
 # bot env var
@@ -19,7 +20,7 @@ BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
 # mongodb env var
 GROUP_MONGODB_URL = os.getenv('MONGODB_URL')
-JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
+JWT_SECRET = os.getenv("JWT_SECRET_KEY")
 
 # kafka env var
 topic = 'chat-messages'
@@ -40,9 +41,8 @@ producer = Producer(**conf)
 
 groups_db = MongoDBHandler(db_url=GROUP_MONGODB_URL)
 
+
 # kafka acked definition
-
-
 def acked(err, msg):
     if err is not None:
         print(f"Failed to deliver message: {err.str()}")
@@ -54,9 +54,8 @@ def acked(err, msg):
 bot = commands.Bot(command_prefix='/', intents=discord.Intents.all())
 # ------------------------------------------------- DISCORD EVENTS -----------------------------------------------------
 
+
 # BOT READY CHECK ON CONSOLE
-
-
 @bot.event
 async def on_ready():
     # send message to console when bot is ready
@@ -64,9 +63,8 @@ async def on_ready():
     print(bot.user.name)
     print('Console Check: ChatsTodo Bot is Ready')
 
+
 # MESSAGE LISTENER TO KAFKA
-
-
 @bot.event
 async def on_message(message):
     # we do not want the bot to reply to itself
@@ -83,15 +81,14 @@ async def on_message(message):
         return
 
     # send message to kafka
-    platform = "discord"
+    platform = "Discord"
     sender_name = message.author.name
-    group_id = message.channel.id
+    group_id = message.guild.id
     message = message.content
 
     kafka_parcel = {"platform": platform, "sender_name": sender_name,
                     "group_id": group_id, "message": message}
     kafka_parcel_string = json.dumps(kafka_parcel)
-    print(kafka_parcel_string)  # print the kafka parcel string for debugging
 
     try:
         producer.produce(topic, kafka_parcel_string, callback=acked)
@@ -113,9 +110,9 @@ async def ping(ctx):
     await ctx.send('Pong!')
 
 
-# hi command
+# start command
 @bot.command()
-async def hi(ctx):
+async def start(ctx):
     await ctx.send('Hello! I am ChatsTodo Bot. I am here to help you with your tasks.\n'
                    'Here are the commands you can use:\n'
                    '!ping - Pong!\n')
@@ -132,8 +129,8 @@ async def connect(ctx):
         except Exception as e:
             await ctx.send("Currently we are facing difficulties generating the code. Please try again later.")
 
-        user_credentials = {"userId": str(ctx.author.id), "userName": str(
-            ctx.author.name), "platform": "Discord"}
+        user_credentials = {"userId": str(ctx.author.id), "userName":
+                            ctx.author.name, "platform": "Discord"}
         response = requests.post(api_url, json=user_credentials)
         x = response.json()
         code = x["verification_code"]
@@ -141,6 +138,34 @@ async def connect(ctx):
 
 
 # TODO: IMPLEMENT REFRESH SUMMARY
+# ERROR HERE
+@bot.command()
+async def refresh(ctx):
+    if isinstance(ctx.channel, discord.DMChannel):
+        api_url = ""
+        try:
+            api_url = os.environ.get("INTERNAL_URL_REFRESH")
+        except Exception as e:
+            await ctx.send("Currently we are facing difficulties getting summaries. Please try again later.")
+
+        user_id = str(ctx.author.id)
+        user_name = ctx.author.name
+        platform = "Discord"
+        payload = {"credentialId": user_id,
+                   "credentialName": user_name, "platformName": platform}
+
+        jwt_token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        headers = {"Authorization": f"Bearer {jwt_token}"}
+
+        response = requests.get(api_url, headers=headers)
+        x = response.json()
+
+        # when there is a response and the message in it
+        if x and "message" in x:
+            await ctx.send("Successfully refresh! Please check again with /summary")
+            return
+
+        await ctx.send("There are no updates")
 
 
 # summary command

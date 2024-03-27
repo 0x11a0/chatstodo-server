@@ -69,13 +69,10 @@ const BotController = {
         groupedByTags[tag].events.push(event);
       });
 
-      console.log(groupedByTags);
+      const formattedMessage = formatMessage(groupedByTags, platformName);
 
-      const telegramMessage = formatForTelegram(groupedByTags);
-
-      console.log("Telegram", telegramMessage);
       res.status(200).json({
-        message: telegramMessage,
+        message: formattedMessage,
       });
     } catch (error) {
       console.error("Error fetching summaries:", error);
@@ -97,17 +94,25 @@ const BotController = {
       let hasUpdates = false;
 
       const platform = await Platform.findOne({
-        where: { UserId: userId, platformName: "Telegram" },
+        where: { UserId: userId, platformName: req.platformName },
       });
 
+      if (platform.lastProcessed === null) {
+        platform.lastProcessed = new Date().getDate() - 1;
+      }
+
+      console.log("Platform", platform);
+      console.log(req.credentialId, platform.credentialId);
       // get all groups the user is in for this platform
-      const groups = await Group.find({ user_id: platform.credentialId });
+      const groups = await Group.find({ user_id: req.credentialId });
+      console.log("Groups", groups);
       for (const group of groups) {
         const messages = await Message.findByGroupIdAndPlatformAndTimestamp(
           group.group_id,
           platform.platformName,
           platform.lastProcessed
         );
+        console.log("Messages", messages);
 
         const chatMessages = prepareChatMessages(messages);
         const request = createChatAnalysisRequest(
@@ -145,7 +150,7 @@ const BotController = {
   },
 };
 
-function formatForTelegram(groupedByTags) {
+function formatMessage(groupedByTags, platform) {
   let message = "";
 
   if (groupedByTags === null || Object.keys(groupedByTags).length === 0) {
@@ -153,7 +158,11 @@ function formatForTelegram(groupedByTags) {
   }
 
   Object.keys(groupedByTags).forEach((tag) => {
-    message += `<b>${tag}</b>\n\n`;
+    if (platform === "Telegram") {
+      message += `<b>${tag}</b>\n\n`;
+    } else {
+      message += `**${tag}**\n\n`;
+    }
 
     if (groupedByTags[tag].summaries.length > 0) {
       message += "Summary\n";

@@ -19,7 +19,7 @@ const Platform = sequelize.define("Platform", {
   lastProcessed: {
     type: DataTypes.DATE,
     allowNull: true,
-    defaultValue: sequelize.literal("NOW()"),
+    defaultValue: sequelize.literal("CURRENT_TIMESTAMP"),
   },
 });
 

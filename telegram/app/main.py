@@ -17,8 +17,8 @@ import jwt
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+JWT_SECRET = os.getenv("JWT_SECRET_KEY")
 UPSTASH_KAFKA_SERVER = os.getenv("UPSTASH_KAFKA_SERVER")
 UPSTASH_KAFKA_USERNAME = os.getenv('UPSTASH_KAFKA_USERNAME')
 UPSTASH_KAFKA_PASSWORD = os.getenv('UPSTASH_KAFKA_PASSWORD')
