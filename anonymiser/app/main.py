@@ -24,6 +24,15 @@ def extract_emails(text):
     return re.findall(pattern, text)
 
 
+def enforce_string(message):
+    if isinstance(message, dict):
+        return {k: enforce_string(v) for k, v in message.items()}
+    elif isinstance(message, list):
+        return [enforce_string(item) for item in message]
+    else:
+        return str(message)
+
+
 def generate_random_token():
     random_part = str(uuid.uuid4())
     time_part = datetime.now().strftime("%Y%m%d%H%M%S%f")
@@ -53,6 +62,7 @@ def handle_kafka_error(msg):
 async def process_message(msg, token_vault, chats_db):
     try:
         json_msg = json.loads(msg.value().decode('utf-8'))
+        json_msg = enforce_string(json_msg)
 
         msg_text = json_msg['message']
         matches = extract_emails(msg_text)

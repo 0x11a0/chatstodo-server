@@ -9,6 +9,7 @@ from confluent_kafka import Producer  # for kafka producer
 import sys  # for sys.exit
 import requests  # for requests
 from db.mongodb import MongoDBHandler  # for mongodb
+import jwt
 
 # load the environment variables
 load_dotenv()
@@ -18,6 +19,7 @@ BOT_TOKEN = os.getenv('DISCORD_BOT_TOKEN')
 
 # mongodb env var
 GROUP_MONGODB_URL = os.getenv('MONGODB_URL')
+JWT_SECRET = os.environ.get("JWT_SECRET_KEY")
 
 # kafka env var
 topic = 'chat-messages'
@@ -124,23 +126,46 @@ async def hi(ctx):
 async def connect(ctx):
     # Check if the command is issued in a private channel
     if isinstance(ctx.channel, discord.DMChannel):
-        api_url = "http://authentication:8080/auth/api/v1/bot/request-code"
+        api_url = ""
+        try:
+            api_url = os.environ.get("INTERNAL_URL_GET_VERIFICATION_CODE")
+        except Exception as e:
+            await ctx.send("Currently we are facing difficulties generating the code. Please try again later.")
 
         user_credentials = {"userId": str(ctx.author.id), "userName": str(
             ctx.author.name), "platform": "Discord"}
-
         response = requests.post(api_url, json=user_credentials)
-
         x = response.json()
         code = x["verification_code"]
         await ctx.send(f"Here is your code {code}")
+
+
+# TODO: IMPLEMENT REFRESH SUMMARY
 
 
 # summary command
 @bot.command()
 async def summary(ctx):
     if isinstance(ctx.channel, discord.DMChannel):
-        await ctx.send('Here is your summary...\n')
+        api_url = ""
+        try:
+            api_url = os.environ.get("INTERNAL_URL_GET_ALL_DATA")
+        except Exception as e:
+            await ctx.send("Currently we are facing difficulties getting summaries. Please try again later.")
+
+        user_id = str(ctx.author.id)
+        user_name = ctx.author.name
+        platform = "Discord"
+        payload = {"credentialId": user_id,
+                   "credentialName": user_name, "platformName": platform}
+
+        jwt_token = jwt.encode(payload, JWT_SECRET, algorithm="HS256")
+        headers = {"Authorization": f"Bearer {jwt_token}"}
+
+        response = requests.get(api_url, headers=headers)
+        x = response.json()
+
+        await ctx.send(x["message"])
 
 
 # track command

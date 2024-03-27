@@ -108,7 +108,6 @@ const BotController = {
           platform.platformName,
           platform.lastProcessed
         );
-        console.log(messages);
 
         const chatMessages = prepareChatMessages(messages);
         const request = createChatAnalysisRequest(
