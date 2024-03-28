@@ -32,7 +32,7 @@ func ExecuteAPIServer(databaseConnection *sql.DB, redisClient *redis.Client, jwt
 		authGroup.POST("/oauth/google/callback", OAuthCallbackHandler(databaseConnection, jwtKey))
 	}
 
-    if err := r.Run(":8080"); err != nil {
+    if err := r.Run(":8083"); err != nil {
         log.Fatal("Failed to run server: ", err)
     }
 }
