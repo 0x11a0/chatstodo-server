@@ -85,30 +85,55 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
-### For Bots
+### For Bots to use
 
-1. **Get summary** (WIP)
+1. **Get summary**
 
-   - **Endpoint:** `/summary`
-   - **Method:** `POST`
-   - **Payload:** Insert JWT with user id in it
-   - **Body:**
-
-     ```json
-     {
-       "platform": "Telegram"
-     }
-     ```
-
+   - **Endpoint:** `/bot/all`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with credential id and platform in it
+   - **Body:**: _None required_
    - **Expected Output:**
 
      ```json
      {
-        "tasks": [...],
-        "events": [...],
-        "summaries": [...]
+       "message": "Here are the summary..."
      }
      ```
+
+1. **Get summary**
+
+   - **Endpoint:** `/bot/refresh`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with credential id and platform in it
+   - **Body:**: _None required_
+   - **Expected Output:**
+
+     ```json
+     {
+       "success": true,
+       "message": "Updates were processed"
+     }
+     ```
+
+     Or if there are no updates
+
+     ```json
+     {
+       "success": true,
+       "message": "No updates were necessary."
+     }
+     ```
+
+   - **Error Responses:**
+
+     - `500 Internal error` There is issue with the processing of messages:
+
+       ```json
+       {
+         "error": "Error refreshing"
+       }
+       ```
 
 #### Groups
 
@@ -134,7 +159,7 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 ### For Web Client
 
-1. **Get summary** (WIP)
+1. **Get summary**
 
    - **Endpoint:** `/summary`
    - **Method:** `POST`
@@ -149,6 +174,40 @@ User Manager Service is in charge of linking the platforms where the bots reside
         "summaries": [...]
      }
      ```
+
+1. **Get latest updates from chats**
+
+   - **Endpoint:** `/refresh`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     {
+       "success": true,
+       "message": "Updates were processed"
+     }
+     ```
+
+     Or if there are no updates
+
+     ```json
+     {
+       "success": true,
+       "message": "No updates were necessary."
+     }
+     ```
+
+   - **Error Responses:**
+
+     - `500 Internal error` There is issue with the processing of messages:
+
+       ```json
+       {
+         "error": "Error refreshing"
+       }
+       ```
 
 1. **Add platform**
 
