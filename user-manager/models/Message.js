@@ -35,6 +35,13 @@ messageSchema.statics.findByGroupIdAndPlatformAndTimestamp = async function (
   platform,
   lastProcessed
 ) {
+  if (lastProcessed === null) {
+    return this.find({
+      group_id,
+      platform,
+    }).sort({ timestamp: 1 });
+  }
+  
   const converted = new Date(lastProcessed);
 
   return this.find({
