@@ -46,6 +46,17 @@ User Manager Service is an aggregator service that handles the retrieval and man
 
    By default, the server runs on `http://localhost:3000`.
 
+### Set up gRPC
+
+```
+grpc_tools_node_protoc \
+--js_out=import_style=commonjs,binary:./generated \
+--grpc_out=grpc_js:./generated \
+--proto_path=./protos \
+./protos/chatstodo_ml_service.proto
+
+```
+
 ## Interactions with other services
 
 #### Bots
@@ -56,11 +67,9 @@ User Manager Service is in charge of linking the platforms where the bots reside
 
 #### ML Serverless functions
 
-## gRPC Service for Bots
+## API Usage General
 
-## API Usage for Web Client
-
-**Base URL**: `http://localhost:8081/users/api/v1`
+**Base URL**: `http://user-manager:8081/users/api/v1`
 
 1. **Health**
 
@@ -76,88 +85,390 @@ User Manager Service is in charge of linking the platforms where the bots reside
    }
    ```
 
-1. **Get summary** (WIP)
+### For Bots to use
 
-   - **Endpoint:** `/summary`
-   - **Method:** `POST`
-   - **URL Parameters:** Replace `:userId` with the actual user ID.
-   - **Body:** _None required_
+1. **Get summary**
+
+   - **Endpoint:** `/bot/all`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with credential id and platform in it
+   - **Body:**: _None required_
    - **Expected Output:**
 
-   ```json
-   {
-       "tasks": [...],
-       "events": [...],
-       "summaries": [...]
-   }
-   ```
-
-1. **Add bot platform**
-
-   - **Endpoint:** `/bots`
-   - **Method:** `POST`
-   - **Payload:** Insert JWT with user id in it
-   - **Body:**
-
-   ```json
-   {
-     "platform": "Telegram",
-     "credentials": {
-       "token": "abc123"
+     ```json
+     {
+       "message": "Here are the summary..."
      }
-   }
-   ```
+     ```
 
+1. **Get summary**
+
+   - **Endpoint:** `/bot/refresh`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with credential id and platform in it
+   - **Body:**: _None required_
    - **Expected Output:**
 
-   ```json
-   {
-     "message": "Bot platform added successfully."
-   }
-   ```
+     ```json
+     {
+       "success": true,
+       "message": "Updates were processed"
+     }
+     ```
 
-1. **Remove bot platform**
+     Or if there are no updates
 
-   - **Endpoint:** `/bots`
-   - **Method:** `DELETE`
-   - **Payload:** Insert JWT with user id in it
-   - **Body:**
+     ```json
+     {
+       "success": true,
+       "message": "No updates were necessary."
+     }
+     ```
 
-   ```json
-   {
-     "platform": "Telegram"
-   }
-   ```
+   - **Error Responses:**
 
-   - **Expected Output:**
+     - `500 Internal error` There is issue with the processing of messages:
 
-   ```json
-   {
-     "message": "Platform link removed successfully."
-   }
-   ```
+       ```json
+       {
+         "error": "Error refreshing"
+       }
+       ```
 
-1. **Get all connected bot platforms**
+#### Groups
 
-   - **Endpoint:** `/bots`
+1. **View all groups** (WIP)
+
+   - **Endpoint:** `/groups`
    - **Method:** `GET`
    - **Payload:** Insert JWT with user id in it
    - **Body:** _None required_
    - **Expected Output:**
 
-   ```json
-   [
+     ```json
+     [
        {
-           "platform": "Telegram",
-           "credentials": {
-               "token": "abc123",
-           }
+         "platform": "Telegram",
+         "groups": [
+
+         ]
        },
        ...
-   ]
-   ```
+     ]
+     ```
 
-1. **Logout**
+### For Web Client
+
+1. **Get summary**
+
+   - **Endpoint:** `/summary`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     {
+        "tasks": [...],
+        "events": [...],
+        "summaries": [...]
+     }
+     ```
+
+1. **Get latest updates from chats**
+
+   - **Endpoint:** `/refresh`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     ```json
+     {
+       "success": true,
+       "message": "Updates were processed"
+     }
+     ```
+
+     Or if there are no updates
+
+     ```json
+     {
+       "success": true,
+       "message": "No updates were necessary."
+     }
+     ```
+
+   - **Error Responses:**
+
+     - `500 Internal error` There is issue with the processing of messages:
+
+       ```json
+       {
+         "error": "Error refreshing"
+       }
+       ```
+
+1. **Add platform**
+
+   - **Endpoint:** `/platforms`
+   - **Method:** `POST`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:**
+
+     ```json
+     {
+       "verificationCode": "<verification code>"
+     }
+     ```
+
+   - **Expected Output:**
+
+     Status code: 201
+
+     ```json
+     {
+       "message": "Platform link added successfully."
+     }
+     ```
+
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `404 Not Found` if the vertification code does not exist. The service will return:
+
+       ```json
+       {
+         "error": "Invalid verification code or may have expired. Please request again."
+       }
+       ```
+
+     - `409 Conflict` if the user has already added the same user on the same platform. The service will return:
+
+       ```json
+       {
+         "error": "Invalid verification code or may have expired. Please request again."
+       }
+       ```
+
+     - `500 Internal Server Error` if
+
+       1. the server cannot find the user id and platform in the redis.
+
+       1. database transactions error
+
+       The service will return:
+
+       ```json
+       {
+         "error": "Verification details not found for user."
+       }
+       ```
+
+1. **Remove platform**
+
+   - **Endpoint:** `/platforms`
+   - **Method:** `DELETE`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:**
+
+     ```json
+     {
+       "platformId": 1
+     }
+     ```
+
+   - **Expected Output:**
+
+     Status code: 204
+
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `403 Forbidden` if the user's platform id dont match. The service will return:
+
+       ```json
+       {
+         "error": "You do not own this platform"
+       }
+       ```
+
+     - `404 ` if the user's platform id dont match. The service will return:
+
+       ```json
+       {
+         "error": "You do not own this platform"
+       }
+       ```
+
+1. **Get all connected platforms**
+
+   - **Endpoint:** `/platforms`
+   - **Method:** `GET`
+   - **Payload:** Insert JWT with user id in it
+   - **Body:** _None required_
+   - **Expected Output:**
+
+     - `200 Success`
+       ```json
+          {
+             "platforms": [
+                 {
+                     "id": 3,
+                     "platformName": "Telegram",
+                     "credentialId": "",
+                     "createdAt": "",
+                     "updatedAt": "",
+                     "UserId": "<JWT USER ID>"
+                 }
+                ...
+             ]
+         }
+       ```
+
+   - **Error Responses:**
+
+     - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+       ```json
+       {
+         "error": "Unauthorized"
+       }
+       ```
+
+     - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+       ```json
+       {
+         "error": "Error fetching platforms."
+       }
+       ```
+
+#### Group
+
+1.  **View all groups**
+
+    - **Endpoint:** `/groups`
+    - **Method:** `GET`
+    - **Payload:** Insert JWT with user id in it
+    - **Body:** _None required_
+    - **Expected Output:**
+
+      Status code: 200
+
+      ```json
+      {
+        "platforms": [
+          {
+            "platform": "Telegram",
+            "groups": [
+              {
+                "_id": "", // object id
+                "user_id": "",
+                "group_id": "",
+                "group_name": "Group 1",
+                "platform": "Telegram",
+                "created_at": "2024-03-21T09:35:08.778659+00:00"
+              }
+            ]
+          }
+        ]
+      }
+      ```
+
+    - **Error Responses:**
+
+      - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+        ```json
+        {
+          "error": "Unauthorized."
+        }
+        ```
+
+      - `404 Not Found` if the users have no platform connected. The service will return:
+
+        ```json
+        {
+          "error": "You do not own any platform."
+        }
+        ```
+
+      - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+        ```json
+        {
+          "error": "Error fetching platforms."
+        }
+        ```
+
+1.  **Delete a group**
+
+    - **Endpoint:** `/groups`
+    - **Method:** `DELETE`
+    - **Payload:** Insert JWT with user id in it
+    - **Body:**
+
+      ```json
+      {
+        "groupId": "",
+        "platform": "Telegram"
+      }
+      ```
+
+    - **Expected Output:**
+
+      Status code: 204
+
+    - **Error Responses:**
+
+      - `401 Unauthorized` if the JWT is invalid or null. The service will return:
+
+        ```json
+        {
+          "error": "Unauthorized."
+        }
+        ```
+
+      - `404 Not Found` if the users have no platform connected or no such group id under the user. The service will return:
+
+        ```json
+        {
+          "error": "You do not own any platform."
+        }
+        ```
+
+        ```json
+        {
+          "error": "Group not found."
+        }
+        ```
+
+      - `500 Internal Server Error` if the server is facing error fetching. The service will return:
+
+        ```json
+        {
+          "error": "Error deleting group."
+        }
+        ```
+
+#### User management
+
+1. **Logout** (WIP)
    Endpoint: `/users/logoutAll`
 
    Method: `POST`

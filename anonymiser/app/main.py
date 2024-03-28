@@ -1,31 +1,27 @@
+from datetime import datetime, timezone
+import hashlib
 import json
 import os
 import re
 from os.path import dirname
-from time import sleep
+import uuid
 from dotenv import load_dotenv
+import asyncio
+import logging
 
 from confluent_kafka import Consumer, KafkaError, KafkaException
-
+from db.postgresql import PostgresHandler
 from db.mongodb import MongoDBHandler
-import re
+
+# Setup logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
-def load_email_mapping(file_path):
-    if os.path.exists(file_path):
-        with open(file_path, 'r') as file:
-            try:
-                return json.load(file)
-            except json.JSONDecodeError:
-                return {}
-    else:
-        return {}
-
-
-def save_email_mapping(email_mapping, file_path):
-    with open(file_path, 'w') as file:  # Open the file in write mode
-        json.dump(email_mapping, file, indent=4)
-    print(f"Data written to {file_path}:", email_mapping)
+def extract_emails(text):
+    pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+    return re.findall(pattern, text)
 
 
 def enforce_string(message):
@@ -37,79 +33,103 @@ def enforce_string(message):
         return str(message)
 
 
-def main():
-    print("Starting anonymiser")
+def generate_random_token():
+    random_part = str(uuid.uuid4())
+    time_part = datetime.now().strftime("%Y%m%d%H%M%S%f")
+    raw_token = random_part + time_part
+    return hashlib.sha256(raw_token.encode()).hexdigest()
 
-    dotenv_path = os.path.join(dirname(dirname(dirname(__file__))), '.env')
-    if os.path.exists(dotenv_path):
-        load_dotenv(dotenv_path)
+
+def validate_environment_variables():
+    required_vars = ["UPSTASH_KAFKA_SERVER", "UPSTASH_KAFKA_USERNAME",
+                     "UPSTASH_KAFKA_PASSWORD", "MONGODB_URL", "CHAT_POSTGRESQL_URL"]
+    missing_vars = [var for var in required_vars if not os.getenv(var)]
+    if missing_vars:
+        logger.error("Missing environment variables: {0}".format(
+            ", ".join(missing_vars)))
+        raise EnvironmentError("Missing required environment variables.")
+
+
+def handle_kafka_error(msg):
+    if msg.error().code() == KafkaError._PARTITION_EOF:
+        logger.info('End of partition reached {0} [{1}]'.format(
+            msg.topic(), msg.partition()))
+    else:
+        logger.error('Kafka error: {0}'.format(msg.error()))
+        raise KafkaException(msg.error())
+
+
+async def process_message(msg, token_vault, chats_db):
+    try:
+        json_msg = json.loads(msg.value().decode('utf-8'))
+        json_msg = enforce_string(json_msg)
+
+        msg_text = json_msg['message']
+        matches = extract_emails(msg_text)
+        for match in matches:
+            prev_anonymised = token_vault.get_anonymised_by_type_and_original(
+                match, "email")
+            if not prev_anonymised:
+                random_token = generate_random_token()
+                anonymised_email = f'test{random_token}@{match.split("@")[1]}'
+                msg_text = msg_text.replace(match, anonymised_email)
+                token_vault.insert_token(anonymised_email, match, "email")
+            else:
+                msg_text = msg_text.replace(match, prev_anonymised)
+
+        json_msg['message'] = msg_text
+
+        await chats_db.insert_message(json_msg)
+    except Exception as e:
+        logger.error(f"Failed to process message: {e}")
+
+
+async def consume_and_process(consumer, token_vault, chats_db):
+    while True:
+        msg = consumer.poll(timeout=1.0)
+        if msg is None:
+            continue
+        if msg.error():
+            handle_kafka_error(msg.error())
+        else:
+            await process_message(msg, token_vault, chats_db)
+
+
+async def main():
+    logger.info("Starting anonymiser...")
+
+    dotenv_path = os.path.join(dirname(__file__), '.env')
+    load_dotenv(dotenv_path)
+    validate_environment_variables()
 
     topic = 'chat-messages'
-    UPSTASH_KAFKA_SERVER = os.getenv("UPSTASH_KAFKA_SERVER")
-    UPSTASH_KAFKA_USERNAME = os.getenv('UPSTASH_KAFKA_USERNAME')
-    UPSTASH_KAFKA_PASSWORD = os.getenv('UPSTASH_KAFKA_PASSWORD')
-    MONGODB_URL = os.getenv('MONGODB_URL')
-
-    mongo_handler = MongoDBHandler(db_url=MONGODB_URL)
-
     conf = {
-        'bootstrap.servers': UPSTASH_KAFKA_SERVER,
+        'bootstrap.servers': os.getenv("UPSTASH_KAFKA_SERVER"),
         'sasl.mechanisms': 'SCRAM-SHA-256',
         'security.protocol': 'SASL_SSL',
-        'sasl.username': UPSTASH_KAFKA_USERNAME,
-        'sasl.password': UPSTASH_KAFKA_PASSWORD,
+        'sasl.username': os.getenv('UPSTASH_KAFKA_USERNAME'),
+        'sasl.password': os.getenv('UPSTASH_KAFKA_PASSWORD'),
         'group.id': 'anonymiser-group',
         'auto.offset.reset': 'earliest'
     }
 
+    chats_db = MongoDBHandler(db_url=os.getenv('MONGODB_URL'))
+    token_vault = PostgresHandler(db_url=os.getenv('CHAT_POSTGRESQL_URL'))
+
     consumer = Consumer(**conf)
     consumer.subscribe([topic])
 
-    file_path = 'emails.json'
-
-    email_mapping = load_email_mapping(file_path)
-    email_counter = max([int(email.split('test')[1].split('@')[0])
-                        for email in email_mapping.values()], default=0) + 1
-
     try:
-        while True:
-            msg = consumer.poll(timeout=1.0)
-            if msg is None:
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
-                    # End of partition event
-                    print('%% %s [%d] reached end at offset %d\n' %
-                          (msg.topic(), msg.partition(), msg.offset()))
-                elif msg.error():
-                    raise KafkaException(msg.error())
-            else:
-                resp = msg.value().decode('utf-8')
-                json_msg = json.loads(resp)
-                json_msg = enforce_string(json_msg)
-
-                msg = json_msg['message']
-
-                pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
-                matches = re.findall(pattern, msg)
-                for match in matches:
-                    anonymised_email = \
-                        f'test{email_counter}@{match.split("@")[1]}'
-                    email_mapping[match] = anonymised_email
-                    email_counter += 1
-                    msg = msg.replace(match, anonymised_email)
-
-                json_msg['message'] = msg
-
-                mongo_handler.insert_message(json_msg)
-                print(email_mapping)
-                save_email_mapping(email_mapping, file_path)
-
+        await consume_and_process(consumer, token_vault, chats_db)
+    except KeyboardInterrupt:
+        logger.info("Shutting down by user request.")
+    except Exception as e:
+        logger.error(f"Unhandled exception: {e}")
     finally:
-        # Clean up on exit
+        await chats_db.close_connection()
+        token_vault.close()
         consumer.close()
-        mongo_handler.close_connection()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

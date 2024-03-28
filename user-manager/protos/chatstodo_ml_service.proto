@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package chatstodo_ml_service;
+
+import "google/protobuf/timestamp.proto";
+
+// DO NOT EDIT FIELD NUMBERS. USE reserved IF YOU EDITED THE NUMBERS
+
+// Chat message coming in defined as
+message Chat {
+  string user_id = 1;
+  string chat_message = 2;
+  google.protobuf.Timestamp timestamp = 3;
+}
+
+message UserChatRequest {
+  string user_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  repeated Chat message_text = 3; // Is the message_text going to come in as a list of messages from our bots?
+}
+
+message EventDetail {
+  string event = 1;     // Identified event
+  string location = 2;  // Identified location
+  string time = 3;      // Identified time
+  string date = 4;      // Identified date
+}
+
+// Response containing the post-analyzed chats
+message ChatAnalysisResponse {
+    string userID = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    repeated string summary = 3; // Assuming we have a list of summary for different group chats. Have to relook into implementation
+    repeated string tasks = 4; // As above
+    repeated EventDetail events = 5; // As above
+}
+
+// Define the service
+service ChatAnalysisService {
+    rpc AnalyzeChat(UserChatRequest) returns (ChatAnalysisResponse) {}
+}

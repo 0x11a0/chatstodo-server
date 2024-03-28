@@ -1,39 +1,33 @@
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
+import motor.motor_asyncio
+import logging
 from datetime import datetime, timedelta, timezone
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 
 class MongoDBHandler:
     def __init__(self, db_url, db_name="chatsToDo"):
-        self.db_url = db_url
-        self.db_name = db_name
-        self.client = None
-        self.db = None
-        self.connect_to_db()
+        self.client = motor.motor_asyncio.AsyncIOMotorClient(db_url)
+        self.db = self.client[db_name]
+        logger.info("Connected to MongoDB")
 
-    def connect_to_db(self):
-        try:
-            self.client = MongoClient(self.db_url)
-            # test connection
-            self.client.admin.command('ping')
-            self.db = self.client[self.db_name]
-            print("Connected to MongoDB")
-        except ConnectionFailure:
-            print("Failed to connect to MongoDB")
-            raise
-
-    # Connect to MongoDB, use the "chatsToDo" database and the "Messages" collection
-    def insert_message(self, document, collection_name="Messages"):
+    async def insert_message(self, document, collection_name="Messages"):
+        # Ensure 'timestamp' is correctly formatted as a datetime object
+        document['timestamp'] = datetime.now(timezone.utc)
         collection = self.db[collection_name]
-        return collection.insert_one(document).inserted_id
+        result = await collection.insert_one(document)
+        logger.info(f"Inserted document with ID: {result.inserted_id}")
 
-    def close_connection(self):
+    async def close_connection(self):
         self.client.close()
-        print("Connection to MongoDB closed")
+        logger.info("Connection to MongoDB closed")
 
     # To call, use the following code:
     # documents = mongo_handler.get_past_24hrs("<GROUP_ID>"), replace group id with your group id
     # returns a list of documents corresponding to the chat messages
+
     def get_past_24hrs(self, group_id, collection_name="Messages"):
         collection = self.db[collection_name]
 
@@ -44,7 +38,7 @@ class MongoDBHandler:
         # Find documents matching the group_id and having a timestamp within the past 24 hours
         documents = collection.find({
             "group_id": group_id,
-            "timestamp": {"$gte": twenty_four_hours_ago.isoformat()}
+            "timestamp": {"$gt": twenty_four_hours_ago}
         })
 
         return list(documents)
@@ -52,6 +46,7 @@ class MongoDBHandler:
     # To call, use the following code:
     # deleted_count = mongo_handler.delete_past_24hrs("<GROUP_ID>"), replace group id with your group id
     # returns number of documents deleted
+
     def delete_past_24hrs(self, group_id, collection_name="Messages"):
         collection = self.db[collection_name]
 
@@ -62,7 +57,7 @@ class MongoDBHandler:
         # Delete documents matching the group_id and having a timestamp within the past 24 hours
         result = collection.delete_many({
             "group_id": group_id,
-            "timestamp": {"$gte": twenty_four_hours_ago.isoformat()}
+            "timestamp": {"$gt": twenty_four_hours_ago}
         })
 
         return result.deleted_count

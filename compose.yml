@@ -1,6 +1,8 @@
 version: "3.8"
 services:
   authentication:
+    container_name: authentication
+    restart: always
     build:
       context: ./authentication
       dockerfile: Dockerfile
@@ -10,6 +12,8 @@ services:
       - .env
 
   user-manager:
+    container_name: user-manager
+    restart: always
     build:
       context: ./user-manager
       dockerfile: Dockerfile
@@ -19,10 +23,45 @@ services:
       - .env
 
   anonymiser:
+    container_name: anonymiser
+    restart: always
     build:
       context: ./anonymiser
       dockerfile: Dockerfile
     ports:
       - "8082:8082"
+    env_file:
+      - .env
+
+  ml-functions:
+    container_name: ml-functions
+    restart: always
+    build:
+      context: ./ml-functions
+      dockerfile: Dockerfile
+    ports:
+      - "51000:51000"
+    env_file:
+      - .env
+
+  telegram:
+    container_name: telegram
+    restart: always
+    build:
+      context: ./telegram
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+
+  discord:
+    container_name: discord
+    restart: always
+    build:
+      context: ./discord
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
     env_file:
       - .env

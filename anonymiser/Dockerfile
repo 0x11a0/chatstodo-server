@@ -1,6 +1,13 @@
 ARG PYTHON_VERSION=3.11.8
-FROM python:${PYTHON_VERSION}-slim as base
+FROM python:${PYTHON_VERSION}-alpine as base
 
+ENV PYTHONUNBUFFERED True
+
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    librdkafka-dev
+    
 WORKDIR /app
 
 # Copy the source code into the container.

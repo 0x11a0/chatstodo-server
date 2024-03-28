@@ -6,6 +6,8 @@ Authentication Service is used to exchange a user's email for its UUID within Ch
 
 ## Endpoints
 
+Base URL : `http://authentication:8080`
+
 ### GET /auth/api/v1/health
 
 Checks the health of the authentication service.
@@ -88,6 +90,28 @@ Initiates an OAuth flow and includes the email to get the signed JWT.
       "error": "Database error"
     }
     ```
+
+---
+
+### POST /auth/api/v1/bot/request-code
+
+Generate a code for the user to enter into web client. This links their platform id to their ChatsTodo id.
+
+- Parameters:
+  | Name | Required | Type | Description |
+  | ------: | :------: | :----: | ----------------------------------------------------- |
+  | `userId` | required | string | The user's ID of the platform |
+  | `platform` | required | string | The platform where the user is requesting from |
+
+- Response: `200 OK`
+
+  ```json
+  {
+    "verification_code": "<code>"
+  }
+  ```
+
+- Error Responses: WIP
 
 ## Setup and Configuration
 
