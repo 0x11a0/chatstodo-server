@@ -94,6 +94,29 @@ const UserController = {
       res.status(500).json({ error: "Error Refreshing" });
     }
   },
+
+  clear: async (req, res) => {
+    try {
+      const userId = req.userId;
+      await Platform.findAll({ where: { UserId: userId } }).then((platforms) => {
+        platforms.forEach((platform) => {
+          Group.deleteByUserIdAndPlatform(
+            platform.credentialId,
+            platform.platformName
+          );
+        });
+      });
+      await Summary.destroy({ where: { UserId: userId } });
+      await Task.destroy({ where: { UserId: userId } });
+      await Event.destroy({ where: { UserId: userId } });
+      await Platform.destroy({ where: { UserId: userId } });
+
+      res.status(200).json({ success: true, message: "Data cleared" });
+    } catch (error) {
+      console.error("Error clearing data:", error);
+      res.status(500).json({ error: "Error clearing data" });
+    }
+  },
 };
 
 async function fetchPlatforms(userId) {

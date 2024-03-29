@@ -30,6 +30,13 @@ const groupSchema = new mongoose.Schema(
   }
 );
 
+groupSchema.statics.deleteByUserIdAndPlatform = async function (
+  user_id,
+  platform
+) {
+  return this.deleteMany({ user_id, platform });
+};
+
 const Group = mongoose.model("Group", groupSchema);
 
 module.exports = Group;
