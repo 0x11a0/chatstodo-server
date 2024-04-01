@@ -1,16 +1,16 @@
 // EventController.js
-const Event = require('../models/Event');
+const Event = require("../models/Event");
 
 const EventController = {
   getAllEvents: async (req, res) => {
     const userId = req.userId; // Retrieve the userId from req
 
     try {
-        const events = await Event.findAll({ where: { UserId: userId } });
-        res.json(events);
+      const events = await Event.findAll({ where: { UserId: userId } });
+      res.json(events);
     } catch (error) {
-        console.error('Error fetching events:', error);
-        res.status(500).json({ error: 'Error fetching events' });
+      console.error("Error fetching events:", error);
+      res.status(500).json({ error: "Error fetching events" });
     }
   },
 
@@ -18,37 +18,46 @@ const EventController = {
     try {
       const userId = req.userId; // Retrieve the userId from req
       const { value, location, dateStart, dateEnd, tags } = req.body;
-      const newEvent = await Event.create({ value, location, dateStart, dateEnd, tags, UserId: userId});
+      const newEvent = await Event.create({
+        value,
+        location,
+        dateStart,
+        dateEnd,
+        tags,
+        UserId: userId,
+      });
       res.status(201).json(newEvent);
     } catch (error) {
-      console.error('Error adding event:', error);
-      res.status(500).json({ error: 'Error adding event' });
+      console.error("Error adding event:", error);
+      res.status(500).json({ error: "Error adding event" });
     }
   },
 
   removeEvent: async (req, res) => {
     try {
-        const { eventId } = req.params;
-        const userId = req.userId; // Retrieve the userId from req
+      const { eventId } = req.params;
+      const userId = req.userId; // Retrieve the userId from req
 
-        const event = await Event.findByPk(eventId);
+      const event = await Event.findByPk(eventId);
 
-        if (!event) {
-            return res.status(404).json({ error: 'Event not found' });
-        }
+      if (!event) {
+        return res.status(404).json({ error: "Event not found" });
+      }
 
-        if (event.userId !== userId) {
-            return res.status(403).json({ error: 'Unauthorized: You do not own this event' });
-        }
+      if (event.dataValues.UserId !== userId) {
+        return res
+          .status(403)
+          .json({ error: "Unauthorized: You do not own this summary" });
+      }
 
-        await event.destroy();
+      await event.destroy();
 
-        res.status(204).end();
+      res.status(204).end();
     } catch (error) {
-        console.error('Error removing event:', error);
-        res.status(500).json({ error: 'Error removing event' });
+      console.error("Error removing event:", error);
+      res.status(500).json({ error: "Error removing event" });
     }
-  }
+  },
 };
 
 module.exports = EventController;

@@ -44,24 +44,24 @@ services:
     env_file:
       - .env
 
-  # telegram:
-  #   container_name: telegram
-  #   restart: always
-  #   build:
-  #     context: ./telegram
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8001:8001"
-  #   env_file:
-  #     - .env
+  telegram:
+    container_name: telegram
+    restart: always
+    build:
+      context: ./telegram
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
 
-  # discord:
-  #   container_name: discord
-  #   restart: always
-  #   build:
-  #     context: ./discord
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8002:8002"
-  #   env_file:
-  #     - .env
+  discord:
+    container_name: discord
+    restart: always
+    build:
+      context: ./discord
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env

@@ -40,7 +40,7 @@ const SummaryController = {
         }
 
         // Check if the summary belongs to the user
-        if (summary.userId !== userId) {
+        if (summary.dataValues.UserId !== userId) {
             return res.status(403).json({ error: 'Unauthorized: You do not own this summary' });
         }
 
